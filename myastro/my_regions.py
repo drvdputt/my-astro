@@ -17,17 +17,6 @@ def combine_regions(fn_out, fn1, fn2, *args):
 
 def draw_regions(ax, image_wcs, ds9_reg_files, reg_colors=None):
     """Region file can consist of multiple shapes"""
-    # for i, fn in enumerate(ds9_reg_files):
-    #     shapes = pyregion.open(fn)
-    #     xy_shapes = shapes.as_imagecoord(header=image_wcs.celestial.to_header())
-    #     patches, _ = xy_shapes.get_mpl_patches_texts()
-    #     for p in patches:
-    #         if reg_colors is not None:
-    #             p.set_edgecolor(reg_colors[i])
-    #         ax.add_patch(p)
-
-    # alternate implementation with regions instead of pyregion, because
-    # as_imagecoord is not working for a box exported from ds9
     for i, fn in enumerate(ds9_reg_files):
         regions = Regions.read(fn)
         # go over all region shapes in  the combined region
@@ -44,7 +33,6 @@ def draw_regions(ax, image_wcs, ds9_reg_files, reg_colors=None):
                 # patch kwargs
                 edgecolor=None if reg_colors is None else reg_colors[i],
             )
-
 
 def make_rectangle_skycoord(center, w, h):
     """Returns skycoord containing corners"""
