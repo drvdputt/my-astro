@@ -3,6 +3,7 @@ from regions import PolygonSkyRegion, Regions, PixCoord
 import astropy
 from astropy import units as u
 import numpy as np
+import myastro.plot
 
 
 def combine_regions(fn_out, fn1, fn2, *args):
@@ -14,25 +15,19 @@ def combine_regions(fn_out, fn1, fn2, *args):
             with open(fnN, "r") as fN:
                 fout.write(fN.readlines()[2])
 
-
-def draw_regions(ax, image_wcs, ds9_reg_files, reg_colors=None):
+def load_all_regions(ds9_reg_fn):
+    regions = Regions.read(ds9_reg_fn)
+    return [r for r in regions]
+                
+def draw_all_regions(ax, image_wcs, ds9_reg_files, reg_colors=None):
     """Region file can consist of multiple shapes"""
     for i, fn in enumerate(ds9_reg_files):
         regions = Regions.read(fn)
         # go over all region shapes in  the combined region
         for sub_region in regions:
-            # convert to PixelRegion if a SkyRegion is given
-            if hasattr(sub_region, "to_pixel"):
-                pix_region = sub_region.to_pixel(image_wcs)
-            else:
-                pix_region = sub_region
+            edgecolor = None if reg_colors is None else reg_colors[i]
+            myastro.plot.region(ax, sub_region, image_wcs, edgecolor=edgecolor)
 
-            # use the built-in plot convenience
-            pix_region.plot(
-                ax=ax,
-                # patch kwargs
-                edgecolor=None if reg_colors is None else reg_colors[i],
-            )
 
 def make_rectangle_skycoord(center, w, h):
     """Returns skycoord containing corners"""

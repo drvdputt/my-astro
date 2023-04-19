@@ -1,6 +1,8 @@
 from scipy import ndimage
 import numpy as np
 from astropy.wcs import WCS
+from astropy.wcs.utils import pixel_to_skycoord
+from astropy import units as u
 
 
 def rotate_image_and_wcs(image_array, celestial_wcs: WCS, rotate_angle, autocrop):
@@ -26,7 +28,7 @@ def rotate_image_and_wcs(image_array, celestial_wcs: WCS, rotate_angle, autocrop
 
     """
     ## Step 1: rotation
-    
+
     # rotation of data
     image_rot = ndimage.rotate(image_array, rotate_angle)
     print(f"{image_array.shape} --> {image_rot.shape}")
@@ -96,8 +98,25 @@ def rotate_image_and_wcs(image_array, celestial_wcs: WCS, rotate_angle, autocrop
     new_wcs.wcs.crpix = np.array(new_wcs.wcs.crpix) + crop_translate_xy
     # this is also yx
     new_wcs.array_shape = image_rot.shape
-    
+
     return image_rot, new_wcs
 
-    
-    
+
+def xy_span_arcsec(xy_shape, celestial_wcs):
+    """Compute field of view size in arc seconds for x and y direction
+
+    Returns
+    -------
+    physical x span (arcsec)
+
+    physical y span (arcsec)
+
+    wcs"""
+    corners = pixel_to_skycoord(
+        xp=[0, 0, xy_shape[0] - 1], yp=[0, xy_shape[1] - 1, 0], wcs=celestial_wcs
+    )
+    pixel_scale_y = corners[0].separation(corners[1]).to(u.arcsec)
+    pixel_scale_x = corners[0].separation(corners[2]).to(u.arcsec)
+    return pixel_scale_x, pixel_scale_y
+
+
