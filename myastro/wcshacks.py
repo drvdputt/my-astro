@@ -5,7 +5,9 @@ from astropy.wcs.utils import pixel_to_skycoord
 from astropy import units as u
 
 
-def rotate_image_and_wcs(image_array, celestial_wcs: WCS, rotate_angle, autocrop):
+def rotate_image_and_wcs(
+    image_array, celestial_wcs: WCS, rotate_angle, autocrop, manual_crop=None
+):
     """Rotate image, remove empty space, adjust wcs
 
     Assumes that image is in a[y,x] format.
@@ -85,6 +87,9 @@ def rotate_image_and_wcs(image_array, celestial_wcs: WCS, rotate_angle, autocrop
             print("Suggested crop range: ", (min_i, max_i, min_j, max_j))
         else:
             print("Something weird with data! Skipping autocrop")
+    elif manual_crop is not None:
+        min_i, max_i, min_j, max_j = manual_crop
+        cropped = True
 
     if cropped:
         image_rot = image_rot[min_i:max_i, min_j:max_j]
@@ -133,9 +138,7 @@ def xy_span_arcsec(xy_shape, celestial_wcs):
 
     print(x_corners)
     print(y_corners)
-    corners = pixel_to_skycoord(
-        xp=x_corners, yp=y_corners, wcs=celestial_wcs
-    )
+    corners = pixel_to_skycoord(xp=x_corners, yp=y_corners, wcs=celestial_wcs)
     #  ^
     #  |
     #  y
@@ -146,5 +149,3 @@ def xy_span_arcsec(xy_shape, celestial_wcs):
     pixel_scale_x = corners[0].separation(corners[1]).to(u.arcsec)
     pixel_scale_y = corners[1].separation(corners[2]).to(u.arcsec)
     return pixel_scale_x, pixel_scale_y
-
-

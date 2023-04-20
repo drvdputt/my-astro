@@ -4,6 +4,13 @@ import myastro.wcshacks
 from regions import SkyRegion
 from astropy import units as u
 import math
+from matplotlib import patheffects
+
+# some useful kwarg collections
+
+text_white_black_outline_kwargs = {
+    "path_effects": [patheffects.withStroke(linewidth=2, foreground="k")],
+}
 
 
 def plot_s1d(ax, s, add_labels=True, offset=None, **kwargs):
@@ -147,10 +154,18 @@ def physical_ticklabels(
         "ytickformatter": yformatter,
     }
 
+
 def nice_colorbar(fig, ax, mappable):
     """Colorbar nicely next to plot. Works well with imshow.
 
     https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph"""
-    cax = fig.add_axes([ax.get_position().x1+0.01,ax.get_position().y0,0.02,ax.get_position().height])
-    cb = fig.colorbar(mappable, cax=cax) # Similar to fig.colorbar(im, cax = cax)
+    cax = fig.add_axes(
+        [
+            ax.get_position().x1 + 0.01,
+            ax.get_position().y0,
+            0.02,
+            ax.get_position().height,
+        ]
+    )
+    cb = fig.colorbar(mappable, cax=cax)  # Similar to fig.colorbar(im, cax = cax)
     return cb, cax
