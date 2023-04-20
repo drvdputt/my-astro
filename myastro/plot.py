@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib.colors import LogNorm
 import myastro.wcshacks
 from regions import SkyRegion
+from astropy import units as u
+import math
 
 
 def plot_s1d(ax, s, add_labels=True, offset=None, **kwargs):
@@ -83,4 +85,64 @@ def rotated_imshow(ax, image_array, celestial_wcs, rotate_angle, **imshow_kwargs
         "imshow": nice_imshow(ax, image_rot, **imshow_kwargs),
         "image": image_rot,
         "wcs": wcs_rot,
+    }
+
+
+from myastro.wcshacks import xy_span_arcsec
+from matplotlib import ticker
+
+
+def physical_ticklabels(
+    ax,
+    image_array,
+    celestial_wcs,
+    x_angle_values=None,
+    y_angle_values=None,
+    angle_unit=u.arcsec,
+):
+    """Modify the ticks and labels on an axis to show angular scale.
+
+    Keep the image in pixel coordinates, but change the ticks and labels
+    to that they match whole steps in an angular unit of choice.
+
+    Choice of angular unit not implemented, just defaults to arcsec
+    right now.
+
+    Parameters
+    ----------
+
+    """
+    ny, nx = image_array.shape
+    angle_x, angle_y = xy_span_arcsec([nx, ny], celestial_wcs)
+    print(f"Span is x: {angle_x} and y: {angle_y}")
+    sx, sy = angle_x.to(angle_unit).value, angle_y.to(angle_unit).value
+
+    # convert desired arcsec steps to tick locations
+    angles_x = (
+        np.array(range(0, int(math.ceil(sx))))
+        if x_angle_values is None
+        else x_angle_values
+    )
+    angles_y = (
+        np.array(range(0, int(math.ceil(sy))))
+        if y_angle_values is None
+        else y_angle_values
+    )
+    xticks = angles_x / sx * nx
+    yticks = angles_y / sy * ny
+    ax.set_xticks(xticks)
+    ax.set_yticks(yticks)
+
+    # ticker label format function that converts tick locations to
+    # labels in arcsec units
+    xformatter = ticker.FuncFormatter(lambda x, _: str(int(x / nx * sx)))
+    yformatter = ticker.FuncFormatter(lambda y, _: str(int(y / ny * sy)))
+    ax.xaxis.set_major_formatter(xformatter)
+    ax.yaxis.set_major_formatter(yformatter)
+
+    return {
+        "xticks": xticks,
+        "yticks": yticks,
+        "xtickformatter": xformatter,
+        "ytickformatter": yformatter,
     }

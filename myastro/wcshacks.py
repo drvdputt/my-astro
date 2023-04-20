@@ -105,18 +105,46 @@ def rotate_image_and_wcs(image_array, celestial_wcs: WCS, rotate_angle, autocrop
 def xy_span_arcsec(xy_shape, celestial_wcs):
     """Compute field of view size in arc seconds for x and y direction
 
+    Distances are calculated using angular separation between (0, 0) and
+    (nx - 1, 0) for x, and between (nx - 1, 0) and (nx - 1, ny - 1) for
+    y.
+
+    Parameters
+    ----------
+
+    xy_shape: nx, ny
+
+    celestial_wcs: WCS used for converting x and y (in pixel units) to
+    physical positions.
+
     Returns
     -------
     physical x span (arcsec)
 
     physical y span (arcsec)
 
-    wcs"""
+    wcs
+
+    """
+    xmax = xy_shape[0] - 1
+    ymax = xy_shape[1] - 1
+    x_corners = [0, xmax, xmax, 0]
+    y_corners = [0, 0, ymax, ymax]
+
+    print(x_corners)
+    print(y_corners)
     corners = pixel_to_skycoord(
-        xp=[0, 0, xy_shape[0] - 1], yp=[0, xy_shape[1] - 1, 0], wcs=celestial_wcs
+        xp=x_corners, yp=y_corners, wcs=celestial_wcs
     )
-    pixel_scale_y = corners[0].separation(corners[1]).to(u.arcsec)
-    pixel_scale_x = corners[0].separation(corners[2]).to(u.arcsec)
+    #  ^
+    #  |
+    #  y
+    #  3 .... 2
+    #
+    #
+    #  0 .... 1 x-->
+    pixel_scale_x = corners[0].separation(corners[1]).to(u.arcsec)
+    pixel_scale_y = corners[1].separation(corners[2]).to(u.arcsec)
     return pixel_scale_x, pixel_scale_y
 
 
