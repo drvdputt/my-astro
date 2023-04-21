@@ -13,7 +13,7 @@ text_white_black_outline_kwargs = {
 }
 
 
-def plot_s1d(ax, s, add_labels=True, offset=None, **kwargs):
+def s1d(ax, s, add_labels=True, offset=None, **kwargs):
     default_kwargs = dict(linewidth=0.5, drawstyle="steps")
 
     w = s.spectral_axis.value

@@ -37,10 +37,12 @@ def combine_regions(fn_out, fn1, fn2, *args):
             with open(fnN, "r") as fN:
                 fout.write(fN.readlines()[2])
 
+
 def load_all_regions(ds9_reg_fn):
     regions = Regions.read(ds9_reg_fn)
     return [r for r in regions]
-                
+
+
 def draw_all_regions(ax, image_wcs, ds9_reg_files, reg_colors=None):
     """Region file can consist of multiple shapes"""
     for i, fn in enumerate(ds9_reg_files):
