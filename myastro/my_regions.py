@@ -1,9 +1,31 @@
 from astropy.coordinates import SkyCoord
-from regions import PolygonSkyRegion, Regions, PixCoord
+from regions import (
+    PolygonSkyRegion,
+    Regions,
+    PixCoord,
+    CircleSkyRegion,
+    RectangleSkyRegion,
+)
 import astropy
 from astropy import units as u
 import numpy as np
 import myastro.plot
+from photutils.aperture import SkyRectangularAperture, SkyCircularAperture
+
+
+def circle_to_aperture(r: CircleSkyRegion):
+    """Read DS9 region file and convert to photutils circular aperture
+
+    Only works if file contains circle.
+
+    Only the first region in the file is parsed.
+    """
+    return SkyCircularAperture(r.center, r=r.radius)
+
+
+def rectangle_to_aperture(r: RectangleSkyRegion):
+    """Read DS9 region file and convert to photutils rectangular aperture"""
+    return SkyRectangularAperture(r.center, r.width, r.height, theta=r.angle)
 
 
 def combine_regions(fn_out, fn1, fn2, *args):
