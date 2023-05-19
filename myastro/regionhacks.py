@@ -54,7 +54,14 @@ def draw_all_regions(ax, image_wcs, ds9_reg_files, reg_colors=None):
 
 
 def make_rectangle_skycoord(center, w, h):
-    """Returns skycoord containing corners"""
+    """Returns skycoord containing corners of rectangle.
+
+    Center is the bottom left.
+
+    w and h are the width and height (along ra and dec respectively, no
+    rotation yet)
+
+    """
     right = center.directional_offset_by(-90 * u.degree, w / 2)
     topright = right.directional_offset_by(0 * u.degree, h / 2)
     bottomright = right.directional_offset_by(180 * u.degree, h / 2)
@@ -73,33 +80,6 @@ def skycoord_to_region(skycoord, fn):
     fk5
     polygon(0:47:29.866,-73:16:01.54,0:47:08.130,-73:15:54.38,0:47:08.535,-73:14:22.20,0:46:47.230,-73:14:15.16,0:46:47.529,-73:12:41.15,0:46:00.166,-73:12:26.89,0:46:00.115,-73:13:57.61,0:45:40.568,-73:13:52.20,0:45:40.570,-73:15:15.12,0:45:19.821,-73:15:08.77,0:45:19.756,-73:16:27.30,0:44:55.929,-73:16:16.08,0:44:55.160,-73:17:47.25,0:44:35.645,-73:17:38.89,0:44:34.941,-73:19:07.49,0:44:15.074,-73:18:57.03,0:44:13.789,-73:22:26.68,0:44:35.073,-73:22:33.72,0:44:34.601,-73:24:06.85,0:44:55.891,-73:24:14.62,0:44:55.314,-73:25:45.92,0:45:43.211,-73:26:02.84,0:45:43.194,-73:24:34.67,0:46:03.312,-73:24:41.20,0:46:03.266,-73:23:13.03,0:46:23.559,-73:23:19.57,0:46:23.588,-73:22:05.43,0:46:44.474,-73:22:28.82,0:46:47.982,-73:21:07.38,0:47:09.088,-73:21:29.90,0:47:14.115,-73:19:24.10,0:47:28.880,-73:19:30.18) # color=green"""
     PolygonSkyRegion(vertices=skycoord).write(fn, overwrite=True)
-
-
-def make_miri_rectangle(image_wcs, ra, dec):
-    """
-    Uses the above function for MIRI and our use case with ra and dec in decimal degrees.
-    """
-    center = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
-
-    # dimension of miri imaging according to documentation
-    mirix = 73.25 * u.arcsec
-    miriy = 112.6 * u.arcsec
-
-    fn = f"miri_{ra}_{dec}.reg"
-    corners = make_rectangle_skycoord(center, mirix, miriy)
-    skycoord_to_region(corners, fn)
-
-    return fn
-
-
-def make_sbc_rectangle(image_wcs, ra, dec):
-    center = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
-    sbcx = 31 * u.arcsec
-    sbcy = 35 * u.arcsec
-    fn = f"sbc_{ra:.3f}_{dec:.3f}.reg"
-    corners = make_rectangle_skycoord(center, sbcx, sbcy)
-    skycoord_to_region(corners, fn)
-    return fn
 
 
 def filter_sources_by_region(region_fn, catalog, image_wcs):
