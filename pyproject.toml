@@ -102,10 +102,17 @@ classifiers = [  # Optional
 #
 # For an analysis of this field vs pip's requirements files see:
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
-dependencies = [ # Optional
+dependencies = [
   "astropy",
-  "regions",
+  "astroquery",
+  "jdaviz",
+  "matplotlib",
   "numpy",
+  "photutils",
+  "regions",
+  "scipy",
+  "specutils",
+  "stsynphot"
 ]
 
 # List additional groups of dependencies here (e.g. development
