@@ -1,3 +1,5 @@
+"""Stuff that comes from the SMC imaging photometry proposal. Should probably split this up to the right places."""
+
 from astropy.wcs import WCS
 from astropy.io import fits
 from argparse import ArgumentParser
@@ -121,3 +123,31 @@ else:
     ax.set_ylabel("DEC")
 
 plt.show()
+
+def make_miri_rectangle(image_wcs, ra, dec):
+    """
+    Uses the above function for MIRI and our use case with ra and dec in decimal degrees.
+    """
+    center = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
+
+    # dimension of miri imaging according to documentation
+    mirix = 73.25 * u.arcsec
+    miriy = 112.6 * u.arcsec
+
+    fn = f"miri_{ra}_{dec}.reg"
+    corners = make_rectangle_skycoord(center, mirix, miriy)
+    skycoord_to_region(corners, fn)
+
+    return fn
+
+
+def make_sbc_rectangle(image_wcs, ra, dec):
+    center = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
+    sbcx = 31 * u.arcsec
+    sbcy = 35 * u.arcsec
+    fn = f"sbc_{ra:.3f}_{dec:.3f}.reg"
+    corners = make_rectangle_skycoord(center, sbcx, sbcy)
+    skycoord_to_region(corners, fn)
+    return fn
+
+
