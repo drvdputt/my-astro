@@ -22,8 +22,8 @@ def s1d(ax, s, add_labels=True, offset=None, **kwargs):
     ax.plot(w, s.flux.value, **(default_kwargs | kwargs))
 
     if add_labels:
-        ax.set_xlabel(f"wavelength ({s.spectral_axis.unit})")
-        ax.set_ylabel(f"flux ({s.flux.unit})")
+        ax.set_xlabel(f"wavelength ({s.spectral_axis.unit:latex_inline})")
+        ax.set_ylabel(f"flux ({s.flux.unit:latex_inline})")
 
 
 def region(
