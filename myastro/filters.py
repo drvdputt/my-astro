@@ -45,16 +45,19 @@ class DataFilterCurve(FilterCurve):
         return self.function(wavs)
 
 
-def get_HST_filter_curve(stsynphotstring):
+def get_HST_filter_curve(stsynphotstring, wmin, wmax):
     """Example usage
     uv_real = {'SBC_F150LP': get_HST_filter_curve("acs,sbc,f150lp"),
                'SBC_F165LP': get_HST_filter_curve("acs,sbc,f165lp"),
                'WFC3_F225W': get_HST_filter_curve("wfc3,uvis1,f225w"),
                'WFC3_F275W': get_HST_filter_curve("wfc3,uvis1,f275w")}
+
+    wmin and wmax slice the spectrum1d filter object before returning as
+    the more efficient "DataFilterCurve"
+
     """
     bp = stsynphot.band(stsynphotstring).to_spectrum1d()
-    # raise "break"
-    s = bp[0.1 * u.micron : 0.9 * u.micron]
+    s = bp[wmin * u.micron : wmax * u.micron]
     return DataFilterCurve(s.wavelength.to(u.micron).value, s.flux.value)
 
 
