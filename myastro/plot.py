@@ -105,6 +105,8 @@ def physical_ticklabels(
     celestial_wcs,
     x_angle_values=None,
     y_angle_values=None,
+    x_offset=0,
+    y_offset=0,
     angle_unit=u.arcsec,
 ):
     """Modify the ticks and labels on an axis to show angular scale.
@@ -115,16 +117,27 @@ def physical_ticklabels(
     Choice of angular unit not implemented, just defaults to arcsec
     right now.
 
+    x_angle_values: ticks of choice (not RA/DEC, needs to be along the axes!)
+
+    x_offset: shift visual zero point by subtracting this value from the tick labels
+
+    y_offset: idem for y
+
+    Warning: do this before setting xlim, if you want to keep things
+    intuitive. The ticks are place from the 0,0 point of the image, not
+    the current view.
+
     Parameters
     ----------
 
     """
     ny, nx = image_array.shape
-    angle_x, angle_y = xy_span_arcsec([nx, ny], celestial_wcs)
-    print(f"Span is x: {angle_x} and y: {angle_y}")
-    sx, sy = angle_x.to(angle_unit).value, angle_y.to(angle_unit).value
+    span_x, span_y = xy_span_arcsec([nx, ny], celestial_wcs)
+    print(f"Span is x: {span_x} and y: {span_y}")
+    sx, sy = span_x.to(angle_unit).value, span_y.to(angle_unit).value
+    print(sx, sy)
 
-    # convert desired arcsec steps to tick locations
+    # convert desired arcsec steps to tick locations in pixel units
     angles_x = (
         np.array(range(0, int(math.ceil(sx))))
         if x_angle_values is None
@@ -139,11 +152,17 @@ def physical_ticklabels(
     yticks = angles_y / sy * ny
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
+    print("xticks (pixel)", xticks)
+    print("yticks (pixel)", yticks)
 
     # ticker label format function that converts tick locations to
     # labels in arcsec units
-    xformatter = ticker.FuncFormatter(lambda x, _: str(int(x / nx * sx)))
-    yformatter = ticker.FuncFormatter(lambda y, _: str(int(y / ny * sy)))
+    xformatter = ticker.FuncFormatter(
+        lambda x, _: str(math.floor(x / nx * sx - x_offset + 0.5))
+    )
+    yformatter = ticker.FuncFormatter(
+        lambda y, _: str(math.floor(y / ny * sy - y_offset + 0.5))
+    )
     ax.xaxis.set_major_formatter(xformatter)
     ax.yaxis.set_major_formatter(yformatter)
 
@@ -169,3 +188,39 @@ def nice_colorbar(fig, ax, mappable):
     )
     cb = fig.colorbar(mappable, cax=cax)  # Similar to fig.colorbar(im, cax = cax)
     return cb, cax
+
+
+def scatter_in_pixel_coords(
+    ax,
+    ras,
+    decs,
+    image_wcs,
+    scatter_kwargs={},
+    labels=None,
+):
+    """
+    labels: text labels to point at each point
+
+    """
+    # convert RA and DEC to the right XY coordinates for the image
+    coords = image_wcs.celestial.world_to_pixel_values(ras, decs)
+    x, y = coords[0], coords[1]
+
+    scatter = ax.scatter(x, y, **scatter_kwargs)
+
+    if labels is not None:
+        for i, l in enumerate(labels):
+            ax.annotate(l, (x[i], y[i]))
+
+    # choose a good zoom level
+    # xmin = np.amin(x)
+    # xmax = np.amax(x)
+    # xw = x_fudge * (xmax - xmin)
+    # xc = (xmax + xmin) / 2
+    # ymax = np.amax(y)
+    # ymin = np.amin(y)
+    # yw = y_fudge * (ymax - ymin)
+    # yc = (ymax + ymin) / 2
+    # ax.set_xlim(xc - xw / 2, xc + xw / 2)
+    # ax.set_ylim(yc - yw / 2, yc + yw / 2)
+    return {"scatter": scatter, "x": x, "y": y}

@@ -82,19 +82,27 @@ def skycoord_to_region(skycoord, fn):
     PolygonSkyRegion(vertices=skycoord).write(fn, overwrite=True)
 
 
-def filter_sources_by_region(region_fn, catalog, image_wcs):
+def filter_sources_by_region(region_fn, ras, decs, image_wcs):
     """Region file can be in ra dec or in image coords.
 
-    Catalog needs to have RA and DEC columns in decimal degrees"""
+    Image wcs needed because internal conversion to pixel coords happens
+
+    ras: array
+
+    decs: array
+
+    returns: boolean mask
+
+    """
     regions = Regions.read(region_fn)
     pix_regions = [
         r.to_pixel(image_wcs) if hasattr(r, "to_pixel") else r for r in regions
     ]
 
-    skycoords = SkyCoord(ra=catalog["RA"] * u.degree, dec=catalog["DEC"] * u.degree)
+    skycoords = SkyCoord(ra=ras * u.degree, dec=decs * u.degree)
     pixcoords = PixCoord(*skycoords.to_pixel(image_wcs))
     mask = np.logical_or.reduce([ri.contains(pixcoords) for ri in pix_regions])
-    return catalog[mask]
+    return mask
 
     # keeping old code cause i'm not under version control
     # r2 = r.as_imagecoord(image_wcs.to_header())

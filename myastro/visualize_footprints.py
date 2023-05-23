@@ -29,47 +29,6 @@ def wcs_image(ax, image_array, image_wcs, percentile=None, **kwargs):
     # ax.coords[1].set_format_unit(u.degree)
     return im
 
-
-def show_sources_on_image(
-    ax,
-    catalog,
-    image_array,
-    image_wcs,
-    x_fudge=1,
-    y_fudge=1,
-    scatter_kwargs={},
-    labels=None,
-):
-    """
-    labels: text labels to point at each point
-
-    """
-    # convert RA and DEC to the right XY coordinates for the image
-    coords = image_wcs.celestial.world_to_pixel_values(catalog["RA"], catalog["DEC"])
-    x, y = coords[0], coords[1]
-
-    im = wcs_image(ax, image_array, image_wcs)
-    ax.scatter(x, y, **scatter_kwargs)
-
-    if labels is not None:
-        for i, l in enumerate(labels):
-            ax.annotate(l, (x[i], y[i]))
-
-    # choose a good zoom level
-    xmin = np.amin(x)
-    xmax = np.amax(x)
-    xw = x_fudge * (xmax - xmin)
-    xc = (xmax + xmin) / 2
-    ymax = np.amax(y)
-    ymin = np.amin(y)
-    yw = y_fudge * (ymax - ymin)
-    yc = (ymax + ymin) / 2
-    # ax.set_xlim(xc - xw / 2, xc + xw / 2)
-    # ax.set_ylim(yc - yw / 2, yc + yw / 2)
-
-    return im, ax
-
-
 ap = ArgumentParser()
 ap.add_argument("files", nargs="+")
 ap.add_argument("--image", help="fits file containing background image with WCS")
