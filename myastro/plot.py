@@ -13,10 +13,10 @@ text_white_black_outline_kwargs = {
 }
 
 
-def s1d(ax, s, add_labels=True, offset=None, **kwargs):
+def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
     default_kwargs = dict(linewidth=0.5, drawstyle="steps")
 
-    w = s.spectral_axis.value
+    w = s.spectral_axis.to(wav_unit).value
     if offset is not None:
         w -= offset
     ax.plot(w, s.flux.value, **(default_kwargs | kwargs))
@@ -152,8 +152,8 @@ def physical_ticklabels(
     yticks = angles_y / sy * ny
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
-    print("xticks (pixel)", xticks)
-    print("yticks (pixel)", yticks)
+    # print("xticks (pixel)", xticks)
+    # print("yticks (pixel)", yticks)
 
     # ticker label format function that converts tick locations to
     # labels in arcsec units
