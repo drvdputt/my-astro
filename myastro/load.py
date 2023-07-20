@@ -16,5 +16,5 @@ def get_cubes(d, suffix="s3d.fits"):
         key=lambda x: x.spectral_axis.value[0],
     )
     if len(cubes) == 0:
-        raise f"No cubes found in {d}"
+        raise FileExistsError(f"No cubes found in {d}")
     return cubes
