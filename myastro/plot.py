@@ -5,9 +5,9 @@ from regions import SkyRegion
 from astropy import units as u
 import math
 from matplotlib import patheffects
+from matplotlib import pyplot as plt
 
 # some useful kwarg collections
-
 text_white_black_outline_kwargs = {
     "path_effects": [patheffects.withStroke(linewidth=2, foreground="k")],
 }
@@ -81,6 +81,43 @@ def nice_imshow(ax, a, log_color=False, **kwargs):
         all_kwargs["norm"] = LogNorm(vmin=vmin, vmax=all_kwargs.get("vmax", None))
 
     return ax.imshow(a, **all_kwargs)
+
+
+# create custom 2D colorbar
+# here's a good example https://stackoverflow.com/questions/49871436/scatterplot-with-continuous-bivariate-color-palette-in-python
+def bivariate_imshow(ax, Z1, Z2, cmap1=plt.cm.Blues, cmap2=plt.cm.Reds, cax=None, **imshow_kwargs):
+    """Take two 2D arrays of the same size, two colormaps, and do imshow for the average color
+
+    ax : axes for the data plot
+
+    cax : axes for the 2D colorbar
+
+    Z1, Z2 : 2D arrays
+        data arrays to combine into one plot
+
+    cmap1, cmap2 : color map object e.g. plt.cm.Reds
+        color maps to mix
+    """
+    # Rescale values to fit into colormap range (0->255)
+
+    def average_color(data1, data2):
+        d1 = np.array(255 * (data1 - data1.min()) / (data1.max() - data1.min()), dtype=int)
+        d2 = np.array(255 * (data2 - data2.min()) / (data2.max() - data2.min()), dtype=int)
+        c1 = cmap1(d1)
+        c2 = cmap2(d2)
+        # Color for each point is average of two colors
+        return np.sum([c1, c2], axis=0) / 2.0
+
+    # do imshow
+    ax.imshow(average_color(Z1, Z2), **imshow_kwargs)
+
+    # add legend if cax is given
+    if cax is not None:
+        # arrays to construct legend
+        C1 = np.linspace(np.amin(Z1), np.amax(Z1), 100)
+        C2 = np.linspace(np.amin(Z2), np.amax(Z2), 100)
+        CC1, CC2 = np.meshgrid(C1, C2)
+        cax.imshow(average_color(CC1, CC2))
 
 
 def rotated_imshow(ax, image_array, celestial_wcs, rotate_angle, **imshow_kwargs):
