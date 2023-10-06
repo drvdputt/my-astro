@@ -64,23 +64,31 @@ def extract_overlapping_data(ss):
     return pairs
 
 
-def overlap_shifts(ss, full_output=False):
+def overlap_shifts(ss, percentile=50, full_output=False):
     """Find the ideal shifts to match spectral segments
 
     Can be used as an alternative when using ratios doesn't make sense.
+
+    Parameters
+    ----------
+
+    percentile : float 0 to 100
+        Which percentile to use to calculate the shift
     """
     shifts = []
     median_left = []
     median_right = []
     noise = []
     for left, right in extract_overlapping_data(ss):
-        med_left = np.nanmedian(
+        med_left = np.nanpercentile(
             left,
+            percentile,
             axis=-1,
         )
         median_left.append(med_left)
-        med_right = np.nanmedian(
+        med_right = np.nanpercentile(
             right,
+            percentile,
             axis=-1,
         )
         median_right.append(med_right)
