@@ -8,6 +8,7 @@ import numpy as np
 from astropy.nddata import StdDevUncertainty
 from copy import deepcopy
 
+
 def collapse_flux_and_unc(s3d):
     """
 
@@ -25,6 +26,7 @@ def collapse_flux_and_unc(s3d):
     ) / np.count_nonzero(np.isfinite(s3d.uncertainty.array), axis=(0, 1))
     spec_avg.uncertainty = StdDevUncertainty(spec_avg_unc * s3d.flux.unit)
     return spec_avg
+
 
 def clean_spikes(s3d):
     """Some rules to mask out the worst of the spikes in the data"""
@@ -44,4 +46,3 @@ def clean_spikes(s3d):
     spec2.meta = s3d.meta
 
     return spec2
-
