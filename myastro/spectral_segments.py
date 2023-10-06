@@ -64,7 +64,7 @@ def extract_overlapping_data(ss):
     return pairs
 
 
-def overlap_shifts(ss):
+def overlap_shifts(ss, full_output=False):
     """Find the ideal shifts to match spectral segments
 
     Can be used as an alternative when using ratios doesn't make sense.
@@ -84,20 +84,20 @@ def overlap_shifts(ss):
             axis=-1,
         )
         median_right.append(med_right)
-        factors.append(med_left / med_right)
+        shifts.append(med_left - med_right)
         noise.append(
-            np.sqrt(np.var(flux_left, axis=-1) + np.var(flux_right, axis=-1)) / 2
+            np.sqrt(np.var(left, axis=-1) + np.var(right, axis=-1)) / 2
         )
 
     if full_output:
         return (
-            np.array(factors),
+            np.array(shifts),
             np.array(median_left),
             np.array(median_right),
             np.array(noise),
         )
     else:
-        return np.array(factors)
+        return np.array(shifts)
 
 
 def overlap_ratios(ss, full_output=False):
@@ -126,17 +126,7 @@ def overlap_ratios(ss, full_output=False):
     median_left = []
     median_right = []
     noise = []
-    for i, (v1, v2) in enumerate(find_overlap_ranges(ss)):
-        s_left = ss[i]
-        s_right = ss[i + 1]
-
-        flux_left = s_left.flux[
-            ..., (s_left.spectral_axis >= v1) & (s_left.spectral_axis <= v2)
-        ].value
-        flux_right = s_right.flux[
-            ..., (s_right.spectral_axis >= v1) & (s_right.spectral_axis <= v2)
-        ].value
-
+    for flux_left, flux_right in extract_overlapping_data(ss):
         med_left = np.nanmedian(
             flux_left,
             axis=-1,
