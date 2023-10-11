@@ -1,4 +1,7 @@
 import numpy as np
+from scipy.interpolate import interp1d
+from astropy.nddata import StdDevUncertainty
+from specutils import Spectrum1D
 
 
 def find_overlap_ranges(ss):
@@ -93,9 +96,7 @@ def overlap_shifts(ss, percentile=50, full_output=False):
         )
         median_right.append(med_right)
         shifts.append(med_left - med_right)
-        noise.append(
-            np.sqrt(np.var(left, axis=-1) + np.var(right, axis=-1)) / 2
-        )
+        noise.append(np.sqrt(np.var(left, axis=-1) + np.var(right, axis=-1)) / 2)
 
     if full_output:
         return (
@@ -159,3 +160,158 @@ def overlap_ratios(ss, full_output=False):
         )
     else:
         return np.array(factors)
+
+
+def merge_1d(ss):
+    """Merge a list of sorted Spectrum1D (no 2D or 3D supported for now)
+
+    Uses a sliding merge for a smooth transition, and assuming that the
+    orders are already flux-matched.
+
+    For determining the new wavelength grid, the shortest segment is
+    chosen in the overlap regions.
+
+    Parameters
+    ----------
+    ss: sorted segments (list of Spectrum1D)
+
+    Returns
+    -------
+    Spectrum1D
+
+    """
+    # find the wavelength regions where the segments overlap
+    overlap_ranges = find_overlap_ranges(ss)
+
+    # merge everything
+    new_spectral_axis = np.sort(np.concatenate([s.spectral_axis for s in ss]))
+
+    # replace the points in the overlap ranges by the finest of the two
+    # relevant segments
+    for ileft, (wmin, wmax) in enumerate(overlap_ranges):
+        # keep the points outside the overlap region
+        wavs_outside = new_spectral_axis[
+            (new_spectral_axis < wmin) | (new_spectral_axis > wmax)
+        ]
+        # replace the points inside the overlap region with points from the left segment
+        left_wavs = ss[ileft].spectral_axis
+        wavs_inside = left_wavs[(left_wavs > wmin) & (left_wavs < wmax)]
+        new_spectral_axis = np.sort(np.concatenate([wavs_outside, wavs_inside]))
+
+    flux_new = [
+        interp1d(
+            s.spectral_axis.value,
+            s.flux.value,
+            bounds_error=False,
+            fill_value=np.nan,
+        )(new_spectral_axis.value)
+        for s in ss
+    ]
+    unc_new = [
+        interp1d(
+            s.spectral_axis.value,
+            s.uncertainty.array,
+            bounds_error=False,
+            fill_value=np.nan,
+        )(new_spectral_axis.value)
+        for s in ss
+    ]
+
+    # first, naively combine into one big spectrum without caring about the jumps
+    flux_merged = np.nanmedian(flux_new, axis=0)
+
+    for ileft, (wmin, wmax) in enumerate(overlap_ranges):
+        f_left = flux_new[ileft]
+        f_right = flux_new[ileft + 1]
+        overlap = np.logical_and(new_spectral_axis > wmin, new_spectral_axis < wmax)
+
+        # 0 at wmin, 1 at wmax
+        sliding_f = (new_spectral_axis[overlap] - wmin) / (wmax - wmin)
+        flux_merged[overlap] = (1 - sliding_f) * f_left[overlap] + sliding_f * f_right[
+            overlap
+        ]
+
+    new_uncertainty_sum = np.sqrt(np.nansum([a**2 for a in unc_new], axis=0))
+    new_uncertainty_count = np.count_nonzero(np.isfinite([a for a in unc_new]), axis=0)
+    new_uncertainty = StdDevUncertainty(new_uncertainty_sum / new_uncertainty_count)
+
+    return Spectrum1D(
+        flux_merged * ss[0].flux.unit, new_spectral_axis, uncertainty=new_uncertainty
+    )
+
+
+def merge_nd(ss):
+    """Merge a list of sorted (by wavelength) Spectrum1D segments
+
+    This is a generalized version of merge_1d
+
+    Parameters
+    ----------
+    ss: sorted segments (list of Spectrum1D), of same spatial shape
+
+    Returns
+    -------
+    Spectrum1D
+
+    """
+    # find the wavelength regions where the segments overlap
+    overlap_ranges = find_overlap_ranges(ss)
+
+    # merge everything
+    new_spectral_axis = np.sort(np.concatenate([s.spectral_axis for s in ss]))
+
+    # replace the points in the overlap ranges by the finest of the two
+    # relevant segments
+    for ileft, (wmin, wmax) in enumerate(overlap_ranges):
+        # keep the points outside the overlap region
+        wavs_outside = new_spectral_axis[
+            (new_spectral_axis < wmin) | (new_spectral_axis > wmax)
+        ]
+        # replace the points inside the overlap region with points from the left segment
+        left_wavs = ss[ileft].spectral_axis
+        wavs_inside = left_wavs[(left_wavs > wmin) & (left_wavs < wmax)]
+        new_spectral_axis = np.sort(np.concatenate([wavs_outside, wavs_inside]))
+
+    flux_new = [
+        interp1d(
+            s.spectral_axis.value,
+            s.flux.value,
+            axis=-1,  # this is default, but I'm being explicit here for clarity
+            bounds_error=False,
+            fill_value=np.nan,
+        )(new_spectral_axis.value)
+        for s in ss
+    ]
+    unc_new = [
+        interp1d(
+            s.spectral_axis.value,
+            s.uncertainty.array,
+            axis=-1,
+            bounds_error=False,
+            fill_value=np.nan,
+        )(new_spectral_axis.value)
+        for s in ss
+    ]
+
+    # first, naively combine into one big spectrum without caring about the jumps
+    # At this point, flux_new has indices [segment, space, space, wavelength]
+    flux_merged = np.nanmedian(flux_new, axis=0)
+
+    for ileft, (wmin, wmax) in enumerate(overlap_ranges):
+        f_left = flux_new[ileft]
+        f_right = flux_new[ileft + 1]
+        overlap = np.logical_and(new_spectral_axis > wmin, new_spectral_axis < wmax)
+
+        # f(w) = 0 at wmin, 1 at wmax
+        sliding_f = (new_spectral_axis[overlap] - wmin) / (wmax - wmin)
+        flux_merged[..., overlap] = (1 - sliding_f) * f_left[
+            ..., overlap
+        ] + sliding_f * f_right[..., overlap]
+
+    new_uncertainty_sum = np.sqrt(np.nansum([a**2 for a in unc_new], axis=0))
+    new_uncertainty_count = np.count_nonzero(np.isfinite([a for a in unc_new]), axis=0)
+    new_uncertainty = StdDevUncertainty(new_uncertainty_sum / new_uncertainty_count)
+
+    return Spectrum1D(
+        flux_merged * ss[0].flux.unit, new_spectral_axis, uncertainty=new_uncertainty
+    )
