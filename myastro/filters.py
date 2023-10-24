@@ -86,7 +86,7 @@ def calc_sed(wavs, flux, filters):
 
 
 def plot_spectrum_filters_and_sed(
-    ax_sed, ax_filter, wavs, flux, filters, extra_fluxes=[], text_pos=None
+        ax_sed, ax_filter, wavs, flux, filters, extra_fluxes=[], text_pos=None, text_rot=0
 ):
     """ax_filter: recommendation: a twin axis of ax_sed
 
@@ -100,9 +100,9 @@ def plot_spectrum_filters_and_sed(
     extra fluxes: list of array
         extra curves, will use a line style cycle
 
-    text_pos: list of str
+    text_pos: list of float
         where to put the filter labels on the filter axes (vertical
-        position). Defaults to 0.5.
+        position). Defaults to the average flux.
 
     """
     wavcenters, sed = calc_sed(wavs, flux, filters.values())
@@ -127,7 +127,7 @@ def plot_spectrum_filters_and_sed(
             # name.split("_")[-1],
             color=colors[i],
             ha="center",
-            rotation=90,
+            rotation=text_rot,
         )
 
     # spectrum
