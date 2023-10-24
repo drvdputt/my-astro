@@ -56,10 +56,19 @@ def draw_all_regions(ax, image_wcs, ds9_reg_files, reg_colors=None):
 def make_rectangle_skycoord(center, w, h):
     """Returns skycoord containing corners of rectangle.
 
-    Center is the bottom left.
+    Parameters
+    ----------
 
-    w and h are the width and height (along ra and dec respectively, no
-    rotation yet)
+    center: SkyCoord
+
+    w: Quantity (angle)
+
+    h: Quantity (angle)
+
+    Returns
+    -------
+    SkyCoord of length 4, containing the bottom left, bottom right, top
+    right, and top left coordinates
 
     """
     right = center.directional_offset_by(-90 * u.degree, w / 2)
@@ -72,14 +81,56 @@ def make_rectangle_skycoord(center, w, h):
     return astropy.coordinates.concatenate([bottomleft, bottomright, topright, topleft])
 
 
-def skycoord_to_region(skycoord, fn):
-    """example output:
+def skycoord_to_region(skycoord):
+    """
+    Convert a list of sky coordinates to a PolygonSkyRegion
+
+    Parameters
+    ----------
+    skycoord: SkyCoord
+
+    Returns
+    -------
+    PolygonSkyRegion
+
+    example output when written to disk
 
     # Region file format: DS9 version 4.1
     global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
     fk5
     polygon(0:47:29.866,-73:16:01.54,0:47:08.130,-73:15:54.38,0:47:08.535,-73:14:22.20,0:46:47.230,-73:14:15.16,0:46:47.529,-73:12:41.15,0:46:00.166,-73:12:26.89,0:46:00.115,-73:13:57.61,0:45:40.568,-73:13:52.20,0:45:40.570,-73:15:15.12,0:45:19.821,-73:15:08.77,0:45:19.756,-73:16:27.30,0:44:55.929,-73:16:16.08,0:44:55.160,-73:17:47.25,0:44:35.645,-73:17:38.89,0:44:34.941,-73:19:07.49,0:44:15.074,-73:18:57.03,0:44:13.789,-73:22:26.68,0:44:35.073,-73:22:33.72,0:44:34.601,-73:24:06.85,0:44:55.891,-73:24:14.62,0:44:55.314,-73:25:45.92,0:45:43.211,-73:26:02.84,0:45:43.194,-73:24:34.67,0:46:03.312,-73:24:41.20,0:46:03.266,-73:23:13.03,0:46:23.559,-73:23:19.57,0:46:23.588,-73:22:05.43,0:46:44.474,-73:22:28.82,0:46:47.982,-73:21:07.38,0:47:09.088,-73:21:29.90,0:47:14.115,-73:19:24.10,0:47:28.880,-73:19:30.18) # color=green"""
-    PolygonSkyRegion(vertices=skycoord).write(fn, overwrite=True)
+    return PolygonSkyRegion(vertices=skycoord)
+
+
+def make_rectangle_region(ra, dec, w, h):
+    """Make a SkyRegion corresponding to a rectangular detector of a
+    certain angular size.
+
+    This probably only works for small width and height (in angle
+    units). But no one is using wide angle lenses anyway.
+
+    Parameters
+    ----------
+    ra: float
+        RA of the center, decimal degrees
+
+    dec: float
+        DEC of the center, decimal degrees
+
+    w: Quantity (angle)
+        Width in any angle unit
+
+    h: Quantity (angle)
+        Height in any angle unit
+
+    Returns
+    -------
+    PolygonSkyRegion
+
+    """
+    center = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
+    corners = make_rectangle_skycoord(center, w, h)
+    return skycoord_to_region(corners)
 
 
 def filter_sources_by_region(region_fn, ras, decs, image_wcs):
