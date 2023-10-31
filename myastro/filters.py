@@ -86,7 +86,7 @@ def calc_sed(wavs, flux, filters):
 
 
 def plot_spectrum_filters_and_sed(
-        ax_sed, ax_filter, wavs, flux, filters, extra_fluxes=[], text_pos=None, text_rot=0
+    ax_sed, ax_filter, wavs, flux, filters, extra_fluxes=[], text_pos=None, text_rot=0
 ):
     """ax_filter: recommendation: a twin axis of ax_sed
 
@@ -120,7 +120,7 @@ def plot_spectrum_filters_and_sed(
         else:
             text_y = text_pos[i]
 
-        ax_sed.text(
+        ax_filter.text(
             wavcenters[i],
             text_y,
             name,
