@@ -2,6 +2,28 @@
 
 import numpy as np
 
+def asinh_curve(image, scale, offset):
+    """curve(x) = asinh(scale * (x - offset))
+
+    *for the image*
+
+    Which value is black? We want to curve to go through zero, and it's
+    best to always set the black value to 0. The "offset" above is not
+    included in the lower limit, so that a different part of the data
+    can be brought into the linear regime near 0.
+
+    Which value is maximum? curve(cutoff - offset). The plot command is
+    then typically
+
+    imshow(curve(image_array), vmin=0, vmax=curve(cutoff))
+
+    To subtract a background our something similar, the offset should be
+    tweaked instead of moving vmin away from 0.
+
+    To brighten the low-flux areas, increase the scale value
+
+    """
+    return np.arcsinh(scale * (image - offset))
 
 def dumb_scaling(image):
     """Scales a monochromatic image to the 0 - 255 range
