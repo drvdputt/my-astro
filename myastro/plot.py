@@ -6,6 +6,7 @@ from astropy import units as u
 import math
 from matplotlib import patheffects
 from matplotlib import pyplot as plt
+from matplotlib.colors import FuncNorm
 
 # some useful kwarg collections
 text_white_black_outline_kwargs = {
@@ -64,6 +65,12 @@ def region(
             **annotation_kwargs,
         )
 
+def make_asinh_FuncNorm(scale, offset, cutoff):
+    def forward(x):
+        np.arcsinh(scale * (x - offset))
+    def reverse(y):
+        np.sinh(y) / scale + offset
+    return FuncNorm(functions=(forward, reverse), vmin=0, vmax=forward(cutoff))
 
 def nice_imshow(ax, a, log_color=False, **kwargs):
     pmin = 1
