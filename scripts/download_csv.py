@@ -5,6 +5,8 @@ from astroquery.mast import Observations
 from astropy.table import Table
 from sys import argv
 
+# Observations.login(token="")
+
 print("opening ", argv[1])
 # obsid_table = Table.read('/Users/dvandeputte/Downloads/Proposal_IDs_1288(1).csv')
 obsid_table = Table.read(argv[1], comment="#")
