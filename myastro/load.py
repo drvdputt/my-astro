@@ -25,8 +25,14 @@ def get_cubes(d, suffix="s3d.fits"):
 
 def stis_sx2(fn):
     with fits.open(fn) as hdul:
+        print(fn)
+        print(hdul[0].header['TARGNAME'])
+        hdul.info()
         sci = hdul['SCI']
         bunit = u.Unit(sci.header['BUNIT'])
         s = Spectrum1D(sci.data * bunit, wcs=WCS(sci), uncertainty=StdDevUncertainty(hdul['ERR'].data * bunit))
-        s.meta['header'] = sci.header
+        s.meta['s_header'] = sci.header
+        s.meta['p_header'] = hdul[0].header
+        s.meta['file'] = fn
     return s
+
