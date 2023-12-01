@@ -109,6 +109,27 @@ def overlap_shifts(ss, percentile=50, full_output=False):
         return np.array(shifts)
 
 
+def shifts_to_offsets(shifts, reference_segment_index):
+    """From N - 1 shifts between N segments, derive the N offsets
+
+    Offsets[i] can be applied to segment[i] before merging the segments.
+
+    Parameters
+    ----------
+
+    shifts: array
+        output of overlap_shifts
+
+    reference_segment_index: int
+        the offset for this segment will be set to 0 by construction
+
+    """
+    offsets = np.full(len(shifts) + 1, 0, dtype=float)
+    offsets[1:] = np.cumsum(shifts)
+    offsets -= offsets[reference_segment_index]
+    return offsets
+
+
 def overlap_ratios(ss, full_output=False):
     """Get the offsets, i.e. stitching factors, for a list of spectral elements.
 
