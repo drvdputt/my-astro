@@ -4,6 +4,15 @@ from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum1D
 
 
+def sort(ss):
+    """Put the given spectra in the right order.
+
+    Works by sorting by the lowest wavelength
+
+    """
+    return sorted(ss, key=lambda x: x.spectral_axis.value[0])
+
+
 def find_overlap_ranges(ss):
     """Find the wavelength overlap regions of a list of spectra.
 
