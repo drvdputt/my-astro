@@ -40,12 +40,6 @@ def find_overlap_ranges(ss):
         if v2 > v1:
             wav_overlap_ranges.append((v1, v2))
 
-    wav_channel_span = []
-    for i in range(0, len(ss), 3):
-        short = ss[i]
-        long = ss[i + 2]
-        wav_channel_span.append((short.spectral_axis[0], long.spectral_axis[-1]))
-
     return wav_overlap_ranges
 
 
