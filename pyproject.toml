@@ -106,6 +106,7 @@ dependencies = [
   "astropy",
   "astroquery",
   "jdaviz",
+  "jwst",
   "matplotlib",
   "numpy",
   "photutils",
