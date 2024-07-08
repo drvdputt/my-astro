@@ -22,7 +22,7 @@ def main():
             print(d.meta.calibration_software_version)
             print(d.meta.ref_file.crds.context_used)
             print("\nInstrument:")
-            print_node_by_key(d.meta.instrument, ["detector", "channel", "band"])
+            print_node_by_key(d.meta.instrument, ["detector", "channel", "band", "filter", "grating"])
             print("\nObservation:")
             print_node_by_key(d.meta.observation, ["observation_label", "bkgdtarg"])
             print("\nProgram:")
