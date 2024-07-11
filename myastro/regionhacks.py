@@ -5,6 +5,7 @@ from regions import (
     PixCoord,
     CircleSkyRegion,
     RectangleSkyRegion,
+    LineSkyRegion,
 )
 import astropy
 from astropy import units as u
@@ -141,6 +142,40 @@ def make_rectangle_region(ra, dec, w, h):
     center = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
     corners = make_rectangle_skycoord(center, w, h)
     return skycoord_to_region(corners)
+
+
+def make_compass_region(ra, dec, size):
+    """Draw a compass on an image.
+
+    Parameters
+    ----------
+
+    ra, dec: center of the compass in decimal degrees
+
+    size_on_sky: size in arcsec
+
+    wcs: the WCS used to convert the compass to pixel coordinates
+
+    Returns
+    -------
+
+    Two LineSkyRegion objects (from regions package).
+
+    center_north: line piece pointing north
+
+    center_east: line piece pointing east
+
+    These can be plotted using myastro.plot.region().
+
+    """
+    center = SkyCoord(ra, dec, unit="deg", frame="icrs")
+    north = center.directional_offset_by(0 * u.degree, size * u.arcsec)
+    east = center.directional_offset_by(90 * u.degree, size * u.arcsec)
+
+    center_north = LineSkyRegion(center, north)
+    center_east = LineSkyRegion(center, east)
+
+    return center_north, center_east
 
 
 def filter_sources_by_region(region_fn, ras, decs, image_wcs):

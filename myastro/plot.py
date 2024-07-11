@@ -7,6 +7,7 @@ import math
 from matplotlib import patheffects
 from matplotlib import pyplot as plt
 from matplotlib.colors import FuncNorm
+from astropy.coordinates import SkyCoord
 
 # some useful kwarg collections
 text_white_black_outline_kwargs = {
@@ -44,11 +45,16 @@ def region(
     Parameters
     ----------
 
+    ax: Axes
+
     region: SkyRegion object from the "regions" package
 
     celestial: WCS to convert to the right pixel coordinates
 
-    text: add text at the center of the region
+    annotation_text: add text at the center of the region
+
+    annotation_kwargs: arguments passed to annotate().
+       e.g. annotation_kwargs={'color':'r'} to make the text red.
 
     """
     pix_region = sky_region.to_pixel(celestial_wcs)
@@ -65,12 +71,16 @@ def region(
             **annotation_kwargs,
         )
 
+
 def make_asinh_FuncNorm(scale, offset, cutoff):
     def forward(x):
         np.arcsinh(scale * (x - offset))
+
     def reverse(y):
         np.sinh(y) / scale + offset
+
     return FuncNorm(functions=(forward, reverse), vmin=0, vmax=forward(cutoff))
+
 
 def nice_imshow(ax, a, log_color=False, **kwargs):
     pmin = 1
@@ -92,7 +102,9 @@ def nice_imshow(ax, a, log_color=False, **kwargs):
 
 # create custom 2D colorbar
 # here's a good example https://stackoverflow.com/questions/49871436/scatterplot-with-continuous-bivariate-color-palette-in-python
-def bivariate_imshow(ax, Z1, Z2, cmap1=plt.cm.Blues, cmap2=plt.cm.Reds, cax=None, **imshow_kwargs):
+def bivariate_imshow(
+    ax, Z1, Z2, cmap1=plt.cm.Blues, cmap2=plt.cm.Reds, cax=None, **imshow_kwargs
+):
     """Take two 2D arrays of the same size, two colormaps, and do imshow for the average color
 
     ax : axes for the data plot
@@ -108,8 +120,12 @@ def bivariate_imshow(ax, Z1, Z2, cmap1=plt.cm.Blues, cmap2=plt.cm.Reds, cax=None
     # Rescale values to fit into colormap range (0->255)
 
     def average_color(data1, data2):
-        d1 = np.array(255 * (data1 - data1.min()) / (data1.max() - data1.min()), dtype=int)
-        d2 = np.array(255 * (data2 - data2.min()) / (data2.max() - data2.min()), dtype=int)
+        d1 = np.array(
+            255 * (data1 - data1.min()) / (data1.max() - data1.min()), dtype=int
+        )
+        d2 = np.array(
+            255 * (data2 - data2.min()) / (data2.max() - data2.min()), dtype=int
+        )
         c1 = cmap1(d1)
         c2 = cmap2(d2)
         # Color for each point is average of two colors
@@ -221,7 +237,8 @@ def physical_ticklabels(
 def nice_colorbar(fig, ax, mappable):
     """Colorbar nicely next to plot. Works well with imshow.
 
-    https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph"""
+    https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph
+    """
     cax = fig.add_axes(
         [
             ax.get_position().x1 + 0.01,
