@@ -25,8 +25,30 @@ def circle_to_aperture(r: CircleSkyRegion):
 
 
 def rectangle_to_aperture(r: RectangleSkyRegion):
-    """Read DS9 region file and convert to photutils rectangular aperture"""
-    return SkyRectangularAperture(r.center, r.width, r.height, theta=r.angle)
+    """Read DS9 region file and convert to photutils rectangular aperture
+
+    CAVEAT: is the SkyRectangularAperture theta the same as RectangleSkyRegion angle?
+
+    From photutils doc: theta = The position angle (in angular units) of
+    the rectangle “width” side. For a right-handed world coordinate
+    system, the position angle increases counterclockwise from North
+    (PA=0).
+
+    -> width aligned with north then theta = 0
+    -> theta is PA of width
+
+    From regions doc: angle = The rotation angle of the rectangle,
+    measured anti-clockwise. If set to zero (the default), the width
+    axis is lined up with the longitude axis of the celestial
+    coordinate.
+
+    -> width aligned with west when angle = 0...
+    -> angle is PA of height
+
+    Add 90 degrees to fix this?
+
+    """
+    return SkyRectangularAperture(r.center, r.width, r.height, theta=r.angle + 90 * u.degree)
 
 
 def skyregion_to_aperture_auto(r):
