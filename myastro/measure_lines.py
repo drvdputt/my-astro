@@ -8,18 +8,21 @@ usage example:
 line_continuum_and_flux(spectra['HII'].new_flux_unit(u.erg / u.sr / u.s / u.cm**2 / u.micron), 17.885, fwhm_micron=0.007)
 
 """
-from specutils.fitting import fit_lines
 
-# from specutils.analysis import line_flux
-# from specutils import SpectralRegion
+from specutils.fitting import fit_lines
 import numpy as np
 import astropy.units as u
 from pahfit.instrument import fwhm
 from astropy.modeling.functional_models import Gaussian1D
 from astropy.modeling.polynomial import Polynomial1D
-from units import u_line_flux, u_per_lambda, u_fwhm, u_spectrum, u_wav
 from myastro import plot
 from copy import deepcopy
+
+UWAV = u.micron
+UFWHM = u.micron
+USPECTRUM = u.MJy / u.sr
+UPERLAMBDA = u.erg / u.s / u.cm**2 / u.sr / u.micron
+ULINEFLUX = u.erg / (u.s * u.cm**2 * u.sr)
 
 
 def integrate_spectrum(s, wmin=None, wmax=None):
@@ -54,10 +57,10 @@ def line_flux_to_spectral_amplitude(fluxes, wavs, per_lambda=False):
     if per lambda --> per lambda unit
     else MJy / sr
     """
-    stddevs = theoretical_fwhm(wavs) / 2.35482004503 * u_fwhm
-    return (fluxes * u_line_flux / (stddevs * np.sqrt(2 * np.pi))).to(
-        u_per_lambda if per_lambda else u_spectrum,
-        equivalencies=u.spectral_density(wavs * u_wav),
+    stddevs = theoretical_fwhm(wavs) / 2.35482004503 * UFWHM
+    return (fluxes * ULINEFLUX / (stddevs * np.sqrt(2 * np.pi))).to(
+        UPERLAMBDA if per_lambda else USPECTRUM,
+        equivalencies=u.spectral_density(wavs * UWAV),
     )
 
 
@@ -74,10 +77,10 @@ def spectral_amplitude_to_line_flux(amps, wavs):
     amp_per_lambda = (amp * (u.MJy / u.sr)).to(u.erg / u.s / u.cm-2 / u.sr / u.micron, equivalencies=u.spectral_density(wavelength))
     line_flux = (amp_per_lambda * (fwhm * u.micron) / 2.3548 * math.sqrt(2 * math.pi)).to(u.erg / u.s / u.cm-2 / u.sr)
     """
-    stddevs = theoretical_fwhm(wavs) / 2.35482004503 * u_fwhm
+    stddevs = theoretical_fwhm(wavs) / 2.35482004503 * UFWHM
 
-    return (amps * u_per_lambda * stddevs * np.sqrt(2 * np.pi)).to(
-        u_line_flux, equivalencies=u.spectral_density(wavs * u_wav)
+    return (amps * UPERLAMBDA * stddevs * np.sqrt(2 * np.pi)).to(
+        ULINEFLUX, equivalencies=u.spectral_density(wavs * UWAV)
     )
 
 
@@ -289,7 +292,7 @@ def line_continuum_and_flux(s1d_per_lambda, center, fwhm_micron=None, s1d_for_un
     else:
         fwhm = fwhm_micron
 
-    if not s1d_per_lambda.flux.unit.is_equivalent(u_per_lambda):
+    if not s1d_per_lambda.flux.unit.is_equivalent(UPERLAMBDA):
         raise ValueError("s1d is not in per lambda units! Result won't make sense!")
 
     # median estimate left and right of line
@@ -337,7 +340,7 @@ def line_continuum_and_flux(s1d_per_lambda, center, fwhm_micron=None, s1d_for_un
     ).to(u.micron)
 
     return {
-        "line_flux": flux.to(u_line_flux),
+        "line_flux": flux.to(ULINEFLUX),
         "line_unc": unc,
         # cont_model:cont,
         "cont_model": lambda w: cont_linear(w.value) * s1d_per_lambda.unit,
@@ -379,7 +382,7 @@ def measure_all(s1d, centers):
     wav_obs = np.zeros(len(centers))
 
     # do the conversion once here for efficiency
-    s1d_per_lambda = s1d.new_flux_unit(u_per_lambda)
+    s1d_per_lambda = s1d.new_flux_unit(UPERLAMBDA)
 
     # modified copy of the spectrum with lines removed, better for uncertainty estimation.
     s1d_for_unc = deepcopy(s1d_per_lambda)
@@ -536,7 +539,7 @@ def measure_complex(
     wavs = np.array([g.mean.value for g in gauss_results]) * gauss_results[0].mean.unit
 
     fluxes = (amps * stddevs * np.sqrt(2 * np.pi)).to(
-        u_line_flux, equivalencies=u.spectral_density(wavs)
+        ULINEFLUX, equivalencies=u.spectral_density(wavs)
     )
     return {
         "fluxes": fluxes,
