@@ -421,7 +421,6 @@ def measure_complex(
     fwhms,
     wave_bounds_fractional=0.001,
     continuum_degree=1,
-    alt_continuum=False,
     window_fwhm=4,
 ):
     """Measure slightly overlapping lines.
@@ -500,30 +499,11 @@ def measure_complex(
             model += c
     # model += (slope=0, intercept=avgflux)
 
-    # try fixed continuum
-    f = s1d_per_lambda.flux
-    w = s1d_per_lambda.spectral_axis
-    wlo = window[0]
-    whi = window[1]
-
-    x1 = window[0] + fwhms[0]
-    x2 = window[1] - fwhms[-1]
-
-    y1 = np.median(f[np.logical_and(w > wlo, w < wlo + 2 * fwhms[0])])
-    y2 = np.median(f[np.logical_and(w > whi - 2 * fwhms[-1], w < whi)])
-    slope = (y2 - y1) / (x2 - x1)
-    intercept = y2 - slope * x2
-    print(x1, y1)
-    print(x2, y2)
-    print(slope, intercept)
     cont = Polynomial1D(
         continuum_degree,
         name="cont",
-        fixed={"c0": alt_continuum, "c1": alt_continuum},
+        # fixed={"c0": alt_continuum, "c1": alt_continuum},
     )
-    if continuum_degree == 1:
-        cont.c0 = intercept
-        cont.c1 = slope
 
     model += cont
 
