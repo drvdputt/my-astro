@@ -67,8 +67,9 @@ def spectral_amplitude_to_line_flux(amps, wavs):
     CAUTION: amp needs to be in per-lambda flux unit.
 
     flux = amp * fwhm / 2.3548 * sqrt(2 * pi)
-    # resulting unit: MJy micron / sr-1
-    # to make the micron fractor cancel out, we need to convert amplitude from MJy / sr to erg s-1 cm-2 sr-1 micron-1 first
+    # resulting unit: MJy micron / sr-1 to make the micron fractor
+    # cancel out, we need to convert amplitude from MJy / sr to erg s-1
+    # cm-2 sr-1 micron-1 first
 
     from astropy import units as u
     amp_per_lambda = (amp * (u.MJy / u.sr)).to(u.erg / u.s / u.cm-2 / u.sr / u.micron, equivalencies=u.spectral_density(wavelength))
@@ -517,10 +518,6 @@ def measure_complex(
         cont.c0 = intercept
         cont.c1 = slope
 
-    # cont.coerce_units(
-    #     input_units={"x": u.micron},
-    #     return_units={"y": s1d_per_lambda.flux.unit},
-    # )
     model += cont
 
     fit_result = fit_lines(s1d_per_lambda, model, window=window)
