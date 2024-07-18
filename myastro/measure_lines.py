@@ -1,11 +1,8 @@
-"""Functions to measure lines that while not assuming which table we are
-working with. Just spectrum 1D and the wavelength and the window.
+"""Functions to measure lines.
 
-Anything that has hardcoded table columns names, units etc in it, is
-defined in the relevant notebook instead.
-
-usage example:
-line_continuum_and_flux(spectra['HII'].new_flux_unit(u.erg / u.sr / u.s / u.cm**2 / u.micron), 17.885, fwhm_micron=0.007)
+I have two methods available: one based on gaussian+polynomial fitting
+(line_continuum_and_flux), the other based on linear continuum
+subtraction + numerical integration (measure_complex).
 
 """
 
