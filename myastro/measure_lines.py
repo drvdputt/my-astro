@@ -418,28 +418,35 @@ def measure_all(s1d, centers):
 def measure_complex(
     s1d_per_lambda,
     centers,
+    fwhms,
     wave_bounds_fractional=0.001,
     continuum_degree=1,
     alt_continuum=False,
     window_fwhm=4,
 ):
-    """Measure slightly overlapping lines
+    """Measure slightly overlapping lines.
 
-    The simple procedure above measures everything individually
-
-    This one tries to fit everything simultaneously, within a small
-    wavelength range.
-
-    First idea: linear continuum + 1 gaussian for each line
+    Simultaneously fits line amplitude, width, center, and continuum.
 
     Parameters
     ----------
 
-    centers: wavelengths of the lines to fit (sorted!)
+    centers: array
+        wavelengths of the lines to fit (needs to be sorted ascending)
 
-    alt_continuum: bool
-        Use manually tuned continuum method (parameters are determined
-        using medians and then set to 'fixed')
+    fwhms: array
+        fwhm to use for each line as an initial guess, and to determine
+        the fitting window.
+
+    wave_bounds_fractional: width of the interval in which the fitter is
+    given freedom to fit the central wavelength. In fractions of
+    wavelength.
+
+    continuum_degree: int
+        Degree of the polynomial to use for the continuum fit.
+
+    alt_continuum: array
+        Manually specify polynomial parameters
 
     window_fwhm: float
         Width of the window for the fit. The continuum is measured from
@@ -452,10 +459,10 @@ def measure_complex(
         "fluxes" : list of luxes
         "fit" : fitted model object
         "window" : 2 tuple (wmin, wmax)
+
     """
     # reasonable numbers
     avgflux = np.average(s1d_per_lambda.flux)
-    fwhms = fwhm("jwst.miri.mrs.*", centers, as_bounded=True)[:, 0] * u.micron
     stddevs = fwhms / 2.35482004503
     centers_um = np.array(centers) * u.micron
     window = (
