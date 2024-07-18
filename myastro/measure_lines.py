@@ -47,12 +47,20 @@ def theoretical_fwhm(centers):
 
 
 def line_flux_to_spectral_amplitude(fluxes, wavs, per_lambda=False):
-    """Fluxes and wavs need to be arrays
+    """Convert gaussian flux to amplitude in my units.
 
-    amp = flux / (stddev * sqrt(2pi))
+    Parameters
+    ----------
 
-    if per lambda --> per lambda unit
-    else MJy / sr
+    fluxes: fluxes to convert, should be dimensionless (will be
+    multiplied with line flux unit).
+
+    wavs: wavelengths in micron
+
+    per_lambda: bool
+    If False, use MJy / sr (per nu). If true, use UPERLAMBDA (per
+    lambda) as output unit.
+
     """
     stddevs = theoretical_fwhm(wavs) / 2.35482004503 * UFWHM
     return (fluxes * ULINEFLUX / (stddevs * np.sqrt(2 * np.pi))).to(
@@ -62,18 +70,10 @@ def line_flux_to_spectral_amplitude(fluxes, wavs, per_lambda=False):
 
 
 def spectral_amplitude_to_line_flux(amps, wavs):
-    """flux = amp * stddev * sqrt(2pi)
+    """Convert gaussian amplitude to flux in my units.
 
-    CAUTION: amp needs to be in per-lambda flux unit.
+    Uses PAHFIT instrument model to determine FWHM.
 
-    flux = amp * fwhm / 2.3548 * sqrt(2 * pi)
-    # resulting unit: MJy micron / sr-1 to make the micron fractor
-    # cancel out, we need to convert amplitude from MJy / sr to erg s-1
-    # cm-2 sr-1 micron-1 first
-
-    from astropy import units as u
-    amp_per_lambda = (amp * (u.MJy / u.sr)).to(u.erg / u.s / u.cm-2 / u.sr / u.micron, equivalencies=u.spectral_density(wavelength))
-    line_flux = (amp_per_lambda * (fwhm * u.micron) / 2.3548 * math.sqrt(2 * math.pi)).to(u.erg / u.s / u.cm-2 / u.sr)
     """
     stddevs = theoretical_fwhm(wavs) / 2.35482004503 * UFWHM
 
