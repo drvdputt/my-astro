@@ -9,6 +9,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty
+from astropy.table import Table
 
 
 def get_cubes(d, suffix="s3d.fits"):
@@ -41,3 +42,24 @@ def stis_sx2(fn):
         s.meta["p_header"] = hdul[0].header
         s.meta["file"] = fn
     return s
+
+
+def iue(fn):
+    """Load fits file from IUE
+
+    Tested for SWP mxlo
+
+    Returns
+    -------
+    Spectrum1D
+
+    """
+    # The astropy table reader does something useful here, but the
+    # format is a bit weird. We repackage the spectrum here as a
+    # Spectrum1D objec.t
+    t = Table.read(fn)
+    flux = t["FLUX"].quantity[0]
+    spectral_axis = t["WAVE"].quantity[0]
+    # ensure that flux and uncertainty are in the same unit here
+    uncertainty = StdDevUncertainty(t["SIGMA"].quantity[0].to(flux.unit))
+    return Spectrum1D(flux, spectral_axis, uncertainty=uncertainty)
