@@ -7,7 +7,6 @@ import math
 from matplotlib import patheffects
 from matplotlib import pyplot as plt
 from matplotlib.colors import FuncNorm
-from astropy.coordinates import SkyCoord
 
 # some useful kwarg collections
 text_white_black_outline_kwargs = {
@@ -198,18 +197,19 @@ def physical_ticklabels(
     print(sx, sy)
 
     # convert desired arcsec steps to tick locations in pixel units
-    angles_x = (
-        np.array(range(0, int(math.ceil(sx))))
-        if x_angle_values is None
-        else x_angle_values
-    )
-    angles_y = (
-        np.array(range(0, int(math.ceil(sy))))
-        if y_angle_values is None
-        else y_angle_values
-    )
-    xticks = angles_x / sx * nx
-    yticks = angles_y / sy * ny
+    def angle_values_to_tick_locations(user_angles, span, n):
+        """Tick locations means where to put the ticks in terms of pixel
+        indices."""
+        angles = (
+            np.array(range(0, int(math.ceil(sx))))
+            if user_angles is None
+            else user_angles
+        )
+        tick_locations = angles / span * n
+        return tick_locations
+
+    xticks = angle_values_to_tick_locations(x_angle_values, sx, nx)
+    yticks = angle_values_to_tick_locations(y_angle_values, sy, ny)
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
     # print("xticks (pixel)", xticks)
