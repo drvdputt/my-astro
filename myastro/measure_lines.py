@@ -270,11 +270,6 @@ def line_continuum_and_flux(s1d_per_lambda, center, fwhm_micron=None, s1d_for_un
         use a different spectrum (e.g. one with lines removed) to
         estimate the uncertainty in windows near the line. By default, uses a copy of s1d_per_lambda
 
-    remove_nearby_lines: list of float
-        list of wavelengths in micron. Windows around the lines at these
-        wavelengths will be cut out of the spectrum to improve the
-        uncertainty estimation (avoid it from blowing up).
-
     Returns
     -------
     output: dict
