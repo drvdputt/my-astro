@@ -15,3 +15,19 @@ def slice_spectral_axis(s1d, mask):
     s1d_new.meta = s1d.meta
     return s1d_new
     
+def coadd(s1ds, new_spectral_axis=None):
+    """Co-add any list of Spectrum1D objects.
+
+    If cubes, they need to have the same shapes (not supported for now)
+
+    Parameters
+    ----------
+
+    s1ds: list of Spectrum1D
+
+    new_spectral_axis: new wavelength grid. In the future, I want this
+    to be somewhat automatic if None is chosen.
+
+    """
+    pass
+
