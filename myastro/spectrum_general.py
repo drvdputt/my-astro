@@ -54,11 +54,7 @@ def take_s1d_or_quantities(func):
             f = flux
             u = uncertainty
 
-        kwargs["wavelength"] = w
-        kwargs["flux"] = f
-        kwargs["uncertainty"] = u
-
-        return func(*args, **kwargs)
+        return func(*args, wavelength=w, flux=f, uncertainty=u)
 
     return decorated_func
 
