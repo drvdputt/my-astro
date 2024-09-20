@@ -4,6 +4,7 @@ from specutils import Spectrum1D
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+from astropy.nddata import StdDevUncertainty
 
 
 def mask_wavelength_range(s1d, wmin, wmax):
@@ -93,3 +94,12 @@ def write_ecsv(fn, wavelength, flux, uncertainty):
     if uncertainty is not None:
         t.add_column(uncertainty.array * flux.unit)
     t.write(fn)
+
+
+def read_ecsv(fn):
+    t = Table.read(fn)
+    return Spectrum1D(
+        t["flux"].quantity,
+        t["wavelength"].quantity,
+        uncertainty=StdDevUncertainty(t["uncertainty"]) if "uncertainty" in t.colnames else None,
+    )
