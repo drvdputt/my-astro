@@ -9,29 +9,12 @@ For every type of data, I have some tools that find myself constant rewriting or
 re-inventing. Examples of those data-type-specific modules are
 - `image`: anything generally applicable to astronomical images (some things for IFU images too)
 - `spectrum_general`: simple spectra, i.e. anything that is wavelength + flux array.
-- `cube`: any tasks involving spectral data cubes that cannot be handled as the "general" case.
+- `cube`: any tasks involving spectral data cubes that cannot be handled as the
+  "spectru_general" case.
 
-Some of these are simple wrappers or shortcuts for existing tools
-(having those tools as a dependency, and these wrapper functions as an example,
-is useful in itself).
-
-You will find some modules where the name is simply a type of
-data. Most of the time, nearly off-the-shelf solutions exist, and the functions
-I have here are very minimal wrappers, to do everything in with the formats and
-settings that I prefer.
-
-Some specialized tasks are includ
-
-Each of these will have functions that I wrote at some point, to do common tasks
-for data in the formats that I commonly use.
-
-The most common examples are
-
-- Reading / writing those data.
-  use those.
--
-
-- spectrum_general (
+Many functions are simple wrappers or shortcuts for existing tools, doing
+everything with the formats and settings that I prefer. And having those tools
+as a dependency, and these wrapper functions as an example, is useful in itself.
 
 ### Other tools
 
