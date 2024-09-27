@@ -101,5 +101,56 @@ def read_ecsv(fn):
     return Spectrum1D(
         t["flux"].quantity,
         t["wavelength"].quantity,
-        uncertainty=StdDevUncertainty(t["uncertainty"]) if "uncertainty" in t.colnames else None,
+        uncertainty=(
+            StdDevUncertainty(t["uncertainty"]) if "uncertainty" in t.colnames else None
+        ),
     )
+
+
+def normalize(w, flux, wnorm, wnorm_bottom=None, ax=None):
+    """
+    Normalize by amplitude and shift spectrum
+
+    wnorm: float or 2-tuple of float
+        Wavelength at which flux will be chosen for normalization. When tuple:
+        range in which the maximum flux is used instead.
+
+    wnorm_bottom: float
+        Wavelength at which the flux will be used as the offset.
+        Fmax - amplitude is the normalization factor. The spectrum is shifted
+        down by offset before normalization.
+
+    ax: if given, plot the points used for normalization (unimplemented)
+
+    Returns
+    -------
+    dict: {'flux': normalized flux
+            'inorm': index of data point used to normalize}
+
+    """
+    # as normalization factor, choose amplitude of feature at wnorm?
+    # I.e. the difference between 16.4 flux and continuum?
+
+    if wnorm_bottom is None:
+        inorm_bottom = None
+        offset = np.percentile(flux, 1)
+    else:
+        inorm_bottom = np.searchsorted(w, wnorm_bottom)
+        offset = flux[inorm_bottom]
+
+    if hasattr(wnorm, "__len__"):
+        istart = np.searchsorted(w, wnorm[0])
+        istop = np.searchsorted(w, wnorm[1])
+        inorm = np.argmax(flux[istart:istop]) + istart
+    else:
+        inorm = np.searchsorted(w, wnorm)
+    fnorm = flux[inorm]
+
+    factor = fnorm - offset
+
+    # probably better to have some sort of continuum subtraction, so that we can compare the amplitudes of the features.
+    return {
+        "flux": (flux - offset) / factor,
+        "inorm": inorm,
+        "inorm_bottom": inorm_bottom,
+    }
