@@ -12,9 +12,23 @@ def mask_wavelength_range(s1d, wmin, wmax):
 
 
 def slice_spectral_axis(s1d, mask):
-    """Arbitrary slice of spectral axis.
+    """Arbitrary slice of spectral axis using boolean mask
 
-    Need to rebuild object to do this
+    Remove data points from a Spectrum1D object according to the given
+    wavelength mask.
+
+    Parameters
+    ----------
+    spec: Spectrum1D
+
+    mask: bool array same size as spec wavelength axis
+        True means to keep the data for that wavelength
+
+    Returns
+    -------
+
+    Spectrum1D object with sliced flux, spectral axis, uncertainty, and a copy of the original metadata.
+
     """
     s1d_new = Spectrum1D(
         s1d.flux[mask],
@@ -23,6 +37,26 @@ def slice_spectral_axis(s1d, mask):
     )
     s1d_new.meta = s1d.meta
     return s1d_new
+
+
+def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
+    """Remove a list of wavelength ranges from a Spectrum1D.
+
+    This is a common task applied before fitting a spectrum.
+
+    Parameters
+    ----------
+
+    s1d: Spectrum1D
+
+    wmin_wmax_pairs: list of (float, float)
+        Every wavelength range (in micron) that needs to be removed.
+
+    """
+    mask = np.full(s1d.spectral_axis.shape, False)
+    for wmin, wmax in wmin_wmax_pairs:
+        mask = mask | mask_wavelength_range(s1d, wmin, wmax)
+    return slice_spectral_axis(s1d, mask)
 
 
 def coadd(s1ds, new_spectral_axis=None):
@@ -55,7 +89,7 @@ def take_s1d_or_quantities(func):
             f = flux
             u = uncertainty
 
-        return func(*args, wavelength=w, flux=f, uncertainty=u)
+        return func(*args, wavelength=w, flux=f, uncertainty=u, **kwargs)
 
     return decorated_func
 
@@ -70,7 +104,7 @@ def write_ascii_etc(fn, wavelength, flux, uncertainty):
 
 
 @take_s1d_or_quantities
-def write_ecsv(fn, wavelength, flux, uncertainty):
+def write_ecsv(fn, wavelength, flux, uncertainty, **kwargs):
     """Write spectrum (in astropy quantities) to ecsv file
 
     s1d: Spectrum1D
@@ -87,13 +121,16 @@ def write_ecsv(fn, wavelength, flux, uncertainty):
     fn: str
         file name, best is to use ECSV
 
+    kwargs: arguments passed through to write() function of
+        astropy.table.Table.
+
     """
     t = Table()
     t.add_column(wavelength, name="wavelength")
     t.add_column(flux, name="flux")
     if uncertainty is not None:
         t.add_column(uncertainty.array * flux.unit)
-    t.write(fn)
+    t.write(fn, **kwargs)
 
 
 def read_ecsv(fn):
