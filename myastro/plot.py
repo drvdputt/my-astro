@@ -237,7 +237,10 @@ def physical_ticklabels(
 def nice_colorbar(fig, ax, mappable):
     """Colorbar nicely next to plot. Works well with imshow.
 
+    Mappable is typically the image object returned by the imshow call.
+
     https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph
+
     """
     cax = fig.add_axes(
         [
