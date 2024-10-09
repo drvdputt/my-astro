@@ -53,10 +53,11 @@ def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
         Every wavelength range (in micron) that needs to be removed.
 
     """
-    mask = np.full(s1d.spectral_axis.shape, False)
+    to_remove = np.full(s1d.spectral_axis.shape, False)
     for wmin, wmax in wmin_wmax_pairs:
-        mask = mask | mask_wavelength_range(s1d, wmin, wmax)
-    return slice_spectral_axis(s1d, mask)
+        to_remove = to_remove | mask_wavelength_range(s1d, wmin * u.micron, wmax * u.micron)
+    print(f"Removing {np.count_nonzero(to_remove)} wavelength points")
+    return slice_spectral_axis(s1d, ~to_remove)
 
 
 def coadd(s1ds, new_spectral_axis=None):
