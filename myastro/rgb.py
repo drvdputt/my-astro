@@ -72,6 +72,7 @@ def make_naive_rgb(image_r, image_g, image_b, stretch=5, Q=8):
     rgb = [scale_asinh_255(i, stretch, Q) for i in (image_r, image_g, image_b)]
     return np.stack(rgb, axis=-1)
 
+
 def combine_arbitrary_colors(images, colors):
     """Make 3-channel rgb from many channels with different colors.
 
@@ -105,3 +106,17 @@ def combine_arbitrary_colors(images, colors):
 
     # return as list for consistency with the rest of the code
     return [array for array in rgb_totals]
+
+
+def palette(num_colors, cmap="hsv"):
+    """Create colors based on colormap
+
+    Returns
+    -------
+
+    list of RGBA 4-tuples
+
+    """
+    # colors to use for data -> rgb conversion
+    cmap = matplotlib.cm.get_cmap(cmap)
+    return [cmap(i / num_colors) for i in range(num_colors)]
