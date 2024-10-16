@@ -89,10 +89,13 @@ class QRGB:
             scale_pmin=self.scale_pmin,
             scale_pmax=self.scale_pmax,
         )
-        return [
-            image.normalize(self.images[i], offset_p=self.offsets[i], **kwargs)
-            for i in range(self.nc)
-        ]
+        output = np.zeros(self.images.shape)
+        for i in range(self.nc):
+            output[i] = image.normalize(
+                self.images[i], offset_p=self.offsets[i], **kwargs
+            )
+
+        return output
 
     def get_rgb(self):
         """Apply the full algorithm to make imshowable rgb array

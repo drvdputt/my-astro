@@ -99,10 +99,10 @@ def combine_arbitrary_colors(images, colors):
     nx, ny = images[0].shape
     shape = (3, nx, ny)
     rgb_totals = np.zeros(shape)
-    for array, color in zip(images, colors):
-        rgba = matplotlib.colors.to_rgba(color)
+    for i in range(len(images)):
+        rgba = matplotlib.colors.to_rgba(colors[i])
         for c in range(3):
-            rgb_totals[c] += array * rgba[c]
+            rgb_totals[c] += images[i] * rgba[c]
 
     # return as list for consistency with the rest of the code
     return [array for array in rgb_totals]
