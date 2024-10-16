@@ -17,6 +17,7 @@ class QRGB:
     rgb_method: str
         Options are "naive" and "lupton"
     """
+
     def __init__(self, images_array):
         """
         Parameters
@@ -28,20 +29,22 @@ class QRGB:
 
         """
         self.images = images_array
-        nc = self.images.shape[0]
+        self.nc = self.images.shape[0]
 
         # normalization options
         self.clip_pmin = 0
         self.clip_pmax = 100
-        self.offsets = [0] * nc
+        self.scale_pmin = 16
+        self.scale_pmax = 84
+        self.offsets = [0] * self.nc
 
         # colors to use for data -> rgb conversion
         cmap = matplotlib.cm.get_cmap("hsv")
-        self.colors = [cmap(i / nc) for i in range(nc)]
+        self.colors = [cmap(i / self.nc) for i in range(self.nc)]
 
         # rgb combination options
-        self.rgb_method = 'naive'
-        self.stretch == 1
+        self.rgb_method = "naive"
+        self.stretch = 1
         self.Q = 1
 
     @classmethod
@@ -58,12 +61,13 @@ class QRGB:
                 images.append(ccddata[i].data)
                 continue
 
-            image, footprint = reproject.reproject_interp(
+            image, _ = reproject.reproject_interp(
                 ccddata[i],
                 ccddata[wcs_index].wcs,
                 shape_out=ccddata[wcs_index].shape,
                 order="nearest-neighbor",
             )
+            images.append(image)
 
         images_array = np.stack(images, axis=0)
         return cls(images_array)
@@ -86,7 +90,7 @@ class QRGB:
             scale_pmax=self.scale_pmax,
         )
         return [
-            image.normalize(self.images[i], offset_p=self.offsets[i] ** kwargs)
+            image.normalize(self.images[i], offset_p=self.offsets[i], **kwargs)
             for i in range(self.nc)
         ]
 
@@ -109,7 +113,7 @@ class QRGB:
         # apply curve/stretch and combine RGB
         if self.rgb_method == "lupton":
             rgb_uint8 = make_lupton_rgb(r, g, b, stretch=self.stretch, Q=self.Q)
-        elif self.color_method == "naive":
+        elif self.rgb_method == "naive":
             rgb_uint8 = rgb.make_naive_rgb(r, g, b, stretch=self.stretch, Q=self.Q)
         else:
             raise "unsupported color method"
