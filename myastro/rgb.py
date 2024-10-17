@@ -108,6 +108,11 @@ def combine_arbitrary_colors(images, colors):
     return [array for array in rgb_totals]
 
 
+def palette_manual(values_01, cmap="hsv"):
+    cmap = matplotlib.cm.get_cmap(cmap)
+    return [cmap(v) for v in values_01]
+
+
 def palette(num_colors, cmap="hsv"):
     """Create colors based on colormap
 
@@ -117,6 +122,5 @@ def palette(num_colors, cmap="hsv"):
     list of RGBA 4-tuples
 
     """
-    # colors to use for data -> rgb conversion
-    cmap = matplotlib.cm.get_cmap(cmap)
-    return [cmap(i / num_colors) for i in range(num_colors)]
+    values = (i / num_colors for i in range(num_colors))
+    return palette_manual(values, cmap)
