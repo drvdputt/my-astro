@@ -153,3 +153,21 @@ def palette(num_colors, cmap="hsv"):
     """
     values = (i / num_colors for i in range(num_colors))
     return palette_manual(values, cmap)
+
+
+def rgba_to_hex(rgba):
+    """Convert RGBA 4-tuple to hex string"""
+    integers = [int(255 * c) for c in rgba[:3]]
+    return "#{:02x}{:02x}{:02x}".format(*integers)
+
+
+def palette_show_in_notebook(rgba_list):
+    hex_strings = (rgba_to_hex(c) for c in rgba_list)
+    display(
+        Markdown(
+            "<br>".join(
+                f'<span style="font-family: monospace">{color} <span style="color: {color}">████████</span></span>'
+                for color in hex_strings
+            )
+        )
+    )
