@@ -31,17 +31,34 @@ def asinh_curve(image, scale, offset):
 def scale_asinh_255(image, stretch=5, Q=8):
     """Apply asinh stretch, scales monochromatic image to 0 - 255 range.
 
-    Assumes that the data have already been cleaned
-    For the most predictable results, remove negative values from your
-    data at the start, by clipping or applying a suitable bias yourself.
+    Assumes that the data have already been cleaned. For the most
+    predictable results, remove negative values from your data at the
+    start, by clipping or applying a suitable bias yourself. If there
+    are still negative values, they will be clipped (set to 0) here.
 
-    If there are still negative values, they will be clipped (set to 0)
-    here.
+    The Q and stretch parameters are supposed to do the same as
+    make_lupton_rgb from astropy.
 
     Parameters
     ----------
 
     image: 2d array
+
+    stretch: float
+        Scale factor that divides the data before passing it through the
+        ashinh stretch. Will typically be of the same order of magnitude
+        as the input data. Effect is similar as Q, except that it
+        affects the normalization of the curve more strongly. Since my
+        function does another normalization AFTER applying the curve
+        (instead of clipping), there is some redundancy between stretch
+        and Q.
+
+    Q: float > 0
+        Softening parameter. Higher values will make the curve steeper
+        for low fluxes, shallower at high flux, so extra emphasis on low
+        details, while high flux dynamic ranges are compressed. Lower
+        values will push the curve more to the linear regime, with 0
+        being exactly linear.
 
     Returns
     -------
@@ -49,12 +66,24 @@ def scale_asinh_255(image, stretch=5, Q=8):
 
     """
     new_image = image.copy()
-    new_image = Q * np.arcsinh(Q * image / stretch)
-    # configurable percentiles later?
+
+    # try to replicate code from make_lupton_rgb here
+
+    # Not sure what this is for. Just seems to change the total
+    # normalization of the curve. Maybe the stretch and Q numbers are
+    # nicer this way.
+    frac = 0.1
+    slope = frac / np.arcsinh(frac * Q)
+    soften = Q / stretch
+
+    np.multiply(new_image, soften, out=new_image)
+    np.arcsinh(new_image, out=new_image)
+    np.multiply(new_image, slope, out=new_image)
 
     # ensure there are no negative values
     new_image[new_image < 0] = 0
 
+    # instead of renormalizing again, I could clip instead?
     new_image = new_image / np.nanmax(new_image) * 255
     return new_image.astype("uint8")
 
