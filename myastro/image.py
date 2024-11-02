@@ -4,11 +4,25 @@ The functions here deal with monochromatic image data (simple 2d
 arrays). Anything related to combining images into colors, should go
 into rgb.py.
 
+Idea: write them so that they all use the CCDData class from
+astropy.nddata? They have a wcs property which is useful.
+
 """
 
 from myastro import plot
 from matplotlib import pyplot as plt
 import numpy as np
+
+def plot_many(images, ncols=1, **kwargs):
+    nrows = len(images) // ncols
+    if nrows * ncols < len(images):
+        nrows += 1
+    fig, axs = plt.subplots(nrows, ncols)
+    for image, ax in zip(images, axs.flatten()):
+        plot.nice_imshow(ax, image.data, **kwargs)
+
+    return fig, axs
+
 
 def plot_residual(a1, a2):
     """Show two arrays and their difference.
@@ -63,3 +77,4 @@ def normalize(
     width = np.nanpercentile(image, scale_pmax) - np.nanpercentile(image, scale_pmin)
     new_image = (image - np.nanpercentile(image, offset_p)) / width
     return new_image
+

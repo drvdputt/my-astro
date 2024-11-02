@@ -4,6 +4,41 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy import units as u
 
+def update_crval(wcs, measured_coord, true_coord):
+    """
+    Parameters
+    ----------
+
+    wcs: WCS
+        The wcs to update.
+
+    measured_coord: SkyCoord
+        What the coordinate of a reference object is according to the
+        current WCS, i.e. x,y as measured in the image, converted to
+        SkyCoord.
+
+    true_coord: SkyCoord
+        What the coordinate of the reference object should be, in the
+        new WCS.
+
+    Returns
+    -------
+
+    new_wcs: WCS
+
+    """
+    sep = measured_coord.separation(true_coord)
+    pa = measured_coord.position_angle(true_coord)
+
+    crval_coord = SkyCoord(ra=wcs.wcs.crval[0], dec=wcs.wcs.crval[1], unit=u.degree, frame='icrs')
+    crval_coord_new = crval_coord.directional_offset_by(pa, sep)
+
+    wcs_new = wcs.copy()
+    wcs_new.wcs.crval[0] = crval_coord_new.ra.value
+    wcs_new.wcs.crval[1] = crval_coord_new.dec.value
+    return wcs_new
+
+def update_crval(wcs : WCS,
 
 def rotate_image_and_wcs(
     image_array, celestial_wcs: WCS, rotate_angle, autocrop, manual_crop=None
