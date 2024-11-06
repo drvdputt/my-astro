@@ -1,6 +1,7 @@
 from scipy import ndimage
 import numpy as np
 from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy import units as u
 
@@ -37,8 +38,6 @@ def update_crval(wcs, measured_coord, true_coord):
     wcs_new.wcs.crval[0] = crval_coord_new.ra.value
     wcs_new.wcs.crval[1] = crval_coord_new.dec.value
     return wcs_new
-
-def update_crval(wcs : WCS,
 
 def rotate_image_and_wcs(
     image_array, celestial_wcs: WCS, rotate_angle, autocrop, manual_crop=None
