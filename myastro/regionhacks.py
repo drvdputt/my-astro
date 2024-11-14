@@ -6,12 +6,21 @@ from regions import (
     CircleSkyRegion,
     RectangleSkyRegion,
     LineSkyRegion,
+    PixelRegion,
 )
 import astropy
 from astropy import units as u
 import numpy as np
 import myastro.plot
 from photutils.aperture import SkyRectangularAperture, SkyCircularAperture
+
+
+def find_center(r: PixelRegion):
+    if hasattr(r, "center"):
+        return r.center
+    elif hasattr(r, "vertices"):
+        x, y = r.vertices.xy
+        return (np.mean(x), np.mean(y))
 
 
 def circle_to_aperture(r: CircleSkyRegion):
@@ -48,7 +57,9 @@ def rectangle_to_aperture(r: RectangleSkyRegion):
     Add 90 degrees to fix this?
 
     """
-    return SkyRectangularAperture(r.center, r.width, r.height, theta=r.angle + 90 * u.degree)
+    return SkyRectangularAperture(
+        r.center, r.width, r.height, theta=r.angle + 90 * u.degree
+    )
 
 
 def skyregion_to_aperture_auto(r):

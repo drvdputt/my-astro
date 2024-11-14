@@ -7,6 +7,7 @@ import math
 from matplotlib import patheffects
 from matplotlib import pyplot as plt
 from matplotlib.colors import FuncNorm
+from myastro import regionhacks
 
 # some useful kwarg collections
 text_white_black_outline_kwargs = {
@@ -64,9 +65,10 @@ def region(
     )
     if annotation_text is not None:
         # ax.text(pix_region.center.x, pix_region.center.y, text, **text_kwargs)
+        center = regionhacks.find_center(pix_region)
         ax.annotate(
             annotation_text,
-            (pix_region.center.x, pix_region.center.y),
+            center,
             **annotation_kwargs,
         )
 
