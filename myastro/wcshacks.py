@@ -4,6 +4,17 @@ from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy import units as u
+from math import atan2
+
+
+def pc_to_pa(pc1_1, pc1_2):
+    """Calculate position angle from PC matrix.
+
+    Assumption:
+    pc1_1 = cos(pa)
+    pc1_2 = sin(pa)
+    """
+    return atan2(pc1_2, pc1_1)
 
 
 def update_crval(wcs, measured_coord, true_coord):
