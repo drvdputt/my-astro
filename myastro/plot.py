@@ -290,3 +290,9 @@ def scatter_in_pixel_coords(
     # ax.set_xlim(xc - xw / 2, xc + xw / 2)
     # ax.set_ylim(yc - yw / 2, yc + yw / 2)
     return {"scatter": scatter, "x": x, "y": y}
+
+def compass(ax, wcs2d, ra, dec, size_arcsec, color='gray'):
+    rs = regionhacks.make_compass_region(ra, dec, size_arcsec)
+    for r in rs:
+        region(ax, r, wcs2d, color=color)
+        
