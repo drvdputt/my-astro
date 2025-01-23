@@ -13,6 +13,7 @@ from myastro import plot
 from matplotlib import pyplot as plt
 import numpy as np
 
+
 def plot_many(images, ncols=1, **kwargs):
     nrows = len(images) // ncols
     if nrows * ncols < len(images):
@@ -35,7 +36,7 @@ def plot_residual(a1, a2):
 
     """
     fig, ax = plt.subplots(1, 3, sharex=True, sharey=True)
-    kwargs = dict(interpolation='nearest')
+    kwargs = dict(interpolation="nearest")
     plot.nice_imshow(ax[0], a1, **kwargs)
     plot.nice_imshow(ax[1], a2, **kwargs)
     plot.nice_imshow(ax[2], a2 - a1, **kwargs)
@@ -44,6 +45,7 @@ def plot_residual(a1, a2):
     fig.tight_layout()
     fig.subplots_adjust(hspace=0)
     return fig, ax
+
 
 def normalize(
     channel_array, clip_pmin=0, clip_pmax=100, scale_pmin=16, scale_pmax=84, offset_p=0
@@ -77,4 +79,3 @@ def normalize(
     width = np.nanpercentile(image, scale_pmax) - np.nanpercentile(image, scale_pmin)
     new_image = (image - np.nanpercentile(image, offset_p)) / width
     return new_image
-

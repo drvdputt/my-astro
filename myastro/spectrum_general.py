@@ -55,7 +55,9 @@ def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
     """
     to_remove = np.full(s1d.spectral_axis.shape, False)
     for wmin, wmax in wmin_wmax_pairs:
-        to_remove = to_remove | mask_wavelength_range(s1d, wmin * u.micron, wmax * u.micron)
+        to_remove = to_remove | mask_wavelength_range(
+            s1d, wmin * u.micron, wmax * u.micron
+        )
     print(f"Removing {np.count_nonzero(to_remove)} wavelength points")
     return slice_spectral_axis(s1d, ~to_remove)
 

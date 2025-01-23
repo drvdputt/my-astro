@@ -30,6 +30,7 @@ def wcs_image(ax, image_array, image_wcs, percentile=None, **kwargs):
     # ax.coords[1].set_format_unit(u.degree)
     return im
 
+
 ap = ArgumentParser()
 ap.add_argument("files", nargs="+")
 ap.add_argument("--image", help="fits file containing background image with WCS")
@@ -83,4 +84,3 @@ else:
     ax.set_ylabel("DEC")
 
 plt.show()
-

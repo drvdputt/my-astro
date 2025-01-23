@@ -4,6 +4,7 @@ Also has stuff to download filters and load them as objects of my simple
 classes.
 
 """
+
 from itertools import cycle
 import stsynphot
 import numpy as np
