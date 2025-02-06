@@ -8,6 +8,7 @@ from matplotlib import patheffects
 from matplotlib import pyplot as plt
 from matplotlib.colors import FuncNorm
 from myastro import regionhacks
+from matplotlib.ticker import AutoMinorLocator
 
 # some useful kwarg collections
 text_white_black_outline_kwargs = {
@@ -234,6 +235,14 @@ def physical_ticklabels(
         "xtickformatter": xformatter,
         "ytickformatter": yformatter,
     }
+
+
+def nice_ticks(ax):
+    ax.xaxis.set_minor_locator(AutoMinorLocator())
+    ax.yaxis.set_minor_locator(AutoMinorLocator())
+    ax.tick_params(
+        which="both", axis="both", top=True, bottom=True, left=True, right=True
+    )
 
 
 def nice_colorbar(fig, ax, mappable):
