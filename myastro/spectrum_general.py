@@ -132,7 +132,7 @@ def write_ecsv(fn, wavelength, flux, uncertainty, **kwargs):
     t.add_column(wavelength, name="wavelength")
     t.add_column(flux, name="flux")
     if uncertainty is not None:
-        t.add_column(uncertainty.array * flux.unit)
+        t.add_column(uncertainty.array * flux.unit, name='uncertainty')
     t.write(fn, **kwargs)
 
 
