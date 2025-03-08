@@ -80,6 +80,9 @@ def coadd(s1ds, new_spectral_axis=None):
 
 
 def take_s1d_or_quantities(func):
+    """
+    Decorate function so that it can take either s1d or (wavelength, flux, uncertainty).
+    """
     def decorated_func(
         *args, s1d=None, wavelength=None, flux=None, uncertainty=None, **kwargs
     ):
@@ -99,7 +102,10 @@ def take_s1d_or_quantities(func):
 
 @take_s1d_or_quantities
 def write_ascii_etc(fn, wavelength, flux, uncertainty):
-    """Write a spectrum1d in ascii compatible with HST ETCs"""
+    """Write a spectrum1d in ascii compatible with HST ETCs
+
+    args: fn (str): filename
+    """
     flux_etc = flux.to(u.erg * u.cm**-2 * u.s**-1 * u.angstrom**-1).value
     wavelength_etc = wavelength.to(u.angstrom).value
     good = (flux_etc > 0) & (wavelength_etc > 0) & np.isfinite(flux_etc)
