@@ -170,6 +170,7 @@ def physical_ticklabels(
     x_offset=0,
     y_offset=0,
     angle_unit=u.arcsec,
+    verbose=False
 ):
     """Modify the ticks and labels on an axis to show angular scale.
 
@@ -195,9 +196,11 @@ def physical_ticklabels(
     """
     ny, nx = image_array.shape
     span_x, span_y = xy_span_arcsec([nx, ny], celestial_wcs)
-    print(f"Span is x: {span_x} and y: {span_y}")
+    if verbose:
+        print(f"Span is x: {span_x} and y: {span_y}")
     sx, sy = span_x.to(angle_unit).value, span_y.to(angle_unit).value
-    print(sx, sy)
+    if verbose:
+        print(sx, sy)
 
     # convert desired arcsec steps to tick locations in pixel units
     def angle_values_to_tick_locations(user_angles, span, n):
