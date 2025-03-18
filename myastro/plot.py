@@ -304,7 +304,9 @@ def scatter_in_pixel_coords(
     return {"scatter": scatter, "x": x, "y": y}
 
 
-def compass(ax, wcs2d, ra, dec, size_arcsec, color="gray", with_NE_labels=False):
+def compass(
+    ax, wcs2d, ra, dec, size_arcsec, with_NE_labels=False, **plot_region_kwargs
+):
     """Draw simple compass
 
     Two right angle lines pointing to N an E.
@@ -321,10 +323,11 @@ def compass(ax, wcs2d, ra, dec, size_arcsec, color="gray", with_NE_labels=False)
     size_arcsec: float
         length of the lines in arcsec
 
-    color: matplotlib color
-
     with_NE_labels: bool
         Add "N" and "E" labels to North and East directions.
+
+    plot_region_kwargs: dict
+        Arguments passed through to plot.region()
 
     Returns
     -------
@@ -334,14 +337,42 @@ def compass(ax, wcs2d, ra, dec, size_arcsec, color="gray", with_NE_labels=False)
     """
     rs = regionhacks.make_compass_region(ra, dec, size_arcsec)
 
+    plot_region_kwargs.setdefault("color", "gray")
+
+    text_kwargs = {k: plot_region_kwargs.get(k, None) for k in ("color", "alpha")}
+
     for r in rs:
-        region(ax, r, wcs2d, color=color)
+        region(ax, r, wcs2d, **plot_region_kwargs)
 
     if with_NE_labels:
-        pixcoord_N = rs[0].end.to_pixel(wcs2d)
-        pixcoord_E = rs[1].end.to_pixel(wcs2d)
-
-        ax.text(pixcoord_N[0], pixcoord_N[1], "N", color=color)
-        ax.text(pixcoord_E[0], pixcoord_E[1], "E", color=color)
+        text_at_coord(
+            ax,
+            rs[0].end,
+            "N",
+            wcs2d,
+            color=plot_region_kwargs["color"],
+            alpha=plot_region_kwargs["alpha"],
+        )
+        text_at_coord(ax, rs[1].end, "E", wcs2d, **text_kwargs)
 
     return rs
+
+
+def text_at_coord(ax, coord, s, wcs2d, **kwargs):
+    """
+    Plot text on axes at world coordinates
+
+    ax: Axes
+
+    s: str
+        Text
+
+    coord: sky coordinate object
+
+    wcs2d: WCS
+
+    kwargs: dict
+        Arguments passed to ax.text
+    """
+    pixcoord = coord.to_pixel(wcs2d)
+    return ax.text(pixcoord[0], pixcoord[1], s, **kwargs)
