@@ -334,12 +334,14 @@ def compass(ax, wcs2d, ra, dec, size_arcsec, color="gray", with_NE_labels=False)
     """
     rs = regionhacks.make_compass_region(ra, dec, size_arcsec)
 
-    if with_NE_labels:
-        annotation_text = ["N", "E"]
-    else:
-        annotation_text = [None, None]
+    for r in rs:
+        region(ax, r, wcs2d, color=color)
 
-    for r, at in zip(rs, annotation_text):
-        region(ax, r, wcs2d, color=color, annotation_text=at)
+    if with_NE_labels:
+        pixcoord_N = rs[0].end.to_pixel(wcs2d)
+        pixcoord_E = rs[1].end.to_pixel(wcs2d)
+
+        ax.text(pixcoord_N[0], pixcoord_N[1], "N", color=color)
+        ax.text(pixcoord_E[0], pixcoord_E[1], "E", color=color)
 
     return rs

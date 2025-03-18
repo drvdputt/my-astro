@@ -21,6 +21,8 @@ def find_center(r: PixelRegion):
     elif hasattr(r, "vertices"):
         x, y = r.vertices.xy
         return (np.mean(x), np.mean(y))
+    else:
+        raise NotImplementedError(f"find_center() not implemented for {r.__class__}")
 
 
 def circle_to_aperture(r: CircleSkyRegion):
