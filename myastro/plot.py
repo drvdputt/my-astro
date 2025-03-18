@@ -170,7 +170,7 @@ def physical_ticklabels(
     x_offset=0,
     y_offset=0,
     angle_unit=u.arcsec,
-    verbose=False
+    verbose=False,
 ):
     """Modify the ticks and labels on an axis to show angular scale.
 
@@ -304,7 +304,42 @@ def scatter_in_pixel_coords(
     return {"scatter": scatter, "x": x, "y": y}
 
 
-def compass(ax, wcs2d, ra, dec, size_arcsec, color="gray"):
+def compass(ax, wcs2d, ra, dec, size_arcsec, color="gray", with_NE_labels=False):
+    """Draw simple compass
+
+    Two right angle lines pointing to N an E.
+
+    Parameters
+    ----------
+
+    wcs2d: WCS
+        WCS used to draw regions
+
+    ra, dec: float, float
+        position of corner of compass in decimal degrees
+
+    size_arcsec: float
+        length of the lines in arcsec
+
+    color: matplotlib color
+
+    with_NE_labels: bool
+        Add "N" and "E" labels to North and East directions.
+
+    Returns
+    -------
+
+    pair of regions: the two line segment regions that were plotted
+
+    """
     rs = regionhacks.make_compass_region(ra, dec, size_arcsec)
-    for r in rs:
-        region(ax, r, wcs2d, color=color)
+
+    if with_NE_labels:
+        annotation_text = ["N", "E"]
+    else:
+        annotation_text = [None, None]
+
+    for r, at in zip(rs, annotation_text):
+        region(ax, r, wcs2d, color=color, annotation_text=at)
+
+    return rs
