@@ -339,3 +339,136 @@ def merge_nd(ss):
     return Spectrum1D(
         flux_merged * ss[0].flux.unit, new_spectral_axis, uncertainty=new_uncertainty
     )
+
+
+def merge_nd_memfriendly(ss):
+    """Memory-friendly version.
+
+    WARNING: the old version is still there because this one has not
+    been tested properly.
+
+    It is also much faster, and the uncertainty algorithm works slightly
+    differently.
+
+    Merge a list of sorted (by wavelength) Spectrum1D segments
+
+    This is a generalized version of merge_1d
+
+    Parameters
+    ----------
+    ss: sorted segments (list of Spectrum1D), of same spatial shape
+
+    Returns
+    -------
+    Spectrum1D
+
+    """
+    # find the wavelength regions where the segments overlap
+    overlap_ranges = find_overlap_ranges(ss)
+
+    # merge everything
+    new_spectral_axis = np.sort(np.concatenate([s.spectral_axis for s in ss]))
+
+    # replace the points in the overlap ranges by the finest of the two
+    # relevant segments
+    for ileft, (wmin, wmax) in enumerate(overlap_ranges):
+        # keep the points outside the overlap region
+        wavs_outside = new_spectral_axis[
+            (new_spectral_axis < wmin) | (new_spectral_axis > wmax)
+        ]
+        # replace the points inside the overlap region with points from the left segment
+        left_wavs = ss[ileft].spectral_axis
+        wavs_inside = left_wavs[(left_wavs > wmin) & (left_wavs < wmax)]
+        new_spectral_axis = np.sort(np.concatenate([wavs_outside, wavs_inside]))
+
+    # we will sum everthing together, divide by weight to get average
+    flux_merged = np.zeros((ss[0].shape[0], ss[0].shape[1], len(new_spectral_axis)))
+    # do the same for unc (but averaging equation is quadratic)
+    unc2_merged = np.zeros(flux_merged.shape)
+
+    def new_wav_mask(s):
+        return np.logical_and(
+            new_spectral_axis >= s.spectral_axis[0],
+            new_spectral_axis <= s.spectral_axis[-1],
+        )
+
+    def interp_f(s, wmask):
+        return interp1d(
+            s.spectral_axis.value,
+            s.flux.value,
+            axis=-1,  # this is default, but I'm being explicit here for clarity
+            bounds_error=False,
+            fill_value=np.nan,
+        )(new_spectral_axis[wmask])
+
+    def interp_u2(s, wmask):
+        interp_u = interp1d(
+            s.spectral_axis.value,
+            s.uncertainty.array,
+            axis=-1,  # this is default, but I'm being explicit here for clarity
+            bounds_error=False,
+            fill_value=np.nan,
+        )(new_spectral_axis[wmask])
+        return np.square(interp_u)
+
+    # for memory reasons, we step through the whole thing in pairs.
+    # start like this, already filling in the leftmost part.
+
+    # initial state
+    # xxx | ooo | ooo | ooo
+
+    # first loop
+    # L     R write here
+    # xxx X xxx | ooo | ooo
+    #     ^- and fix overlap
+
+    # next
+    #       L     R write here
+    # xxx X xxx X xxx | ooo
+    #           ^- and fix overlap
+
+    ileft = 0
+    iright = 1
+    wmask_left = new_wav_mask(ss[ileft])
+    flux_left = interp_f(ss[ileft], wmask_left)
+    unc2_left = interp_u2(ss[ileft], wmask_left)
+    flux_merged[..., wmask_left] = flux_left
+    unc2_merged[..., wmask_left] = unc2_left
+    for wmin, wmax in overlap_ranges:
+        # calculate and write right part
+        wmask_right = new_wav_mask(ss[iright])
+        flux_right = interp_f(ss[iright], wmask_right)
+        unc2_right = interp_u2(ss[iright], wmask_right)
+        flux_merged[..., wmask_right] = flux_right
+        unc2_merged[..., wmask_right] = unc2_right
+
+        # overwrite overlap part
+        wmask_overlap = wmask_left & wmask_right
+
+        # sliding weight weight(w) = 0 at wmin, 1 at wmax
+        sliding_weight = (new_spectral_axis[wmask_overlap] - wmin) / (wmax - wmin)
+        N_overlap = len(sliding_weight)
+
+        flux_merged[..., wmask_overlap] = (
+            # the last N points of the left part
+            (1 - sliding_weight) * flux_left[..., -N_overlap:]
+            # the first N points of the right part
+            + sliding_weight * flux_right[..., :N_overlap]
+        )
+        unc2_merged[..., wmask_overlap] = (1 - sliding_weight) * unc2_left[
+            ..., -N_overlap:
+        ] + sliding_weight * unc2_right[..., :N_overlap]
+
+        # at the end of the loop, right becomes left...
+        ileft = iright
+        wmask_left = wmask_right
+        flux_left = flux_right
+        unc2_left = unc2_right
+        # and new right will be calculated next loop
+        iright += 1
+
+    return Spectrum1D(
+        flux_merged * ss[0].flux.unit,
+        new_spectral_axis,
+        uncertainty=StdDevUncertainty(np.sqrt(unc2_merged)),
+    )
