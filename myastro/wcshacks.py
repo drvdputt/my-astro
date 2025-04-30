@@ -14,7 +14,7 @@ def pc_to_pa(pc1_1, pc1_2):
     pc1_1 = cos(pa)
     pc1_2 = sin(pa)
     """
-    return atan2(pc1_2, pc1_1)
+    return atan2(pc1_2, pc1_1) * 180 / np.pi
 
 
 def update_crval(wcs, measured_coord, true_coord):
