@@ -18,6 +18,7 @@ regions = "*"
 scipy = "*"
 specutils = "*"
 stsynphot = "*"
+reproject = "^0.14.1"
 
 [build-system]
 requires = ["poetry-core"]
