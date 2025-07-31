@@ -17,7 +17,7 @@ from photutils.aperture import SkyRectangularAperture, SkyCircularAperture
 
 def find_center(r: PixelRegion):
     if hasattr(r, "center"):
-        return r.center
+        return (r.center.x, r.center.y)
     elif hasattr(r, "vertices"):
         x, y = r.vertices.xy
         return (np.mean(x), np.mean(y))
