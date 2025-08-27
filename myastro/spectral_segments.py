@@ -22,11 +22,10 @@ def plot_merge_1d(ax, segments, merge_result, add_segments_with_offset=None):
     """
     color_it = cycle(("#66CCEE", "#228833", "#EE6677"))
     for s in segments:
-        plot.s1d(ax, s, color=next(color_it), alpha=0.9)
-        if add_segments_with_offset is not None:
-            plot.s1d(ax, s + add_segments_with_offset, color=next(color_it), linewidth=1)
+        plot.s1d(ax, s) #, color=next(color_it), alpha=0.9)
+        print("plotting segment")
 
-    plot.s1d(ax, merge_result, color="k", lw=2)
+    plot.s1d(ax, merge_result, color="k", linewidth=1)
 
 
 def sort(ss):
