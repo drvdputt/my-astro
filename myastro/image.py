@@ -47,35 +47,55 @@ def plot_residual(a1, a2):
     return fig, ax
 
 
-def normalize(
-    channel_array, clip_pmin=0, clip_pmax=100, scale_pmin=16, scale_pmax=84, offset_p=0
-):
+def normalize(image, clip_pmin=0, clip_pmax=100, offset_pmin=0, scale_pmax=84):
     """Apply cleaning and move images to the order of magnitude 1
+
+    This happens before any curves are applied. The parameters should be
+    tuned so that the curve to be applied in the future has the best
+    effect.
+
+    For an ashinh curve, the data should be transformed so that the most
+    important part of their dynamic range falls around 0.0-1.0
 
     Steps:
 
-    1. Clip using clip_pmin and clip_pmax as cutoff percentiles.
+    1. First clip using clip_pmin and clip_pmax as cutoff percentiles.
     Everything below pmin is set to the pmin percentile flux value.
     Everything above pmax is set to the pmax percentile flux value.
 
-    2. Subtracts offset using the offset percentile. Everying below
-    offset_p will be set to 0 (TODO: or negative? What is best?)
+    2. Subtract offset using the offset percentile. Everything below the
+    p'th percentile is now forced to zero, and the p'th percentile is
+    now the zero point. Useful to clip off a uniform background.
 
-    3. Rescale the data so that all points between the scale_pmin and
-    scale_pmax percentiles run from 0 to 1. Everything above scale_pmax
-    will still be greater than 1. The idea is that the most important
-    part of the dynamic range happens around 0.5.
+    3. Rescale the data so that all points between the new zero point
+    and the scale_pmax percentile run from 0 to 1. Everything above
+    scale_pmax will still be greater than 1, and therefore ends up in
+    the log regime. The idea is that the most important part of the
+    dynamic range can be placed in the linear regime, by choosing these
+    values wisely.
 
     Returns
     -------
     modified image : array of floats
 
     """
-    cmin = np.nanpercentile(channel_array, clip_pmin)
-    cmax = np.nanpercentile(channel_array, clip_pmax)
-    image = np.maximum(channel_array, cmin)
-    image = np.minimum(image, cmax)
+    if clip_pmax <= clip_pmin:
+        raise ValueError(f"Invalid clip percentiles ({clip_pmin} and {clip_pmax})")
+    if scale_pmax <= offset_pmin:
+        raise ValueError(
+            f"Invalid offsets and scale percentiles ({offset_pmin} and {scale_pmax})"
+        )
 
-    width = np.nanpercentile(image, scale_pmax) - np.nanpercentile(image, scale_pmin)
-    new_image = (image - np.nanpercentile(image, offset_p)) / width
+    # all percentiles used here
+    cmin = np.nanpercentile(image, clip_pmin)
+    cmax = np.nanpercentile(image, clip_pmax)
+    offset = np.nanpercentile(image, offset_pmin)
+    scale = np.nanpercentile(image, scale_pmax) - offset
+
+    # apply clip
+    new_image = np.maximum(image, cmin)
+    new_image = np.minimum(new_image, cmax)
+
+    # apply offset, zero clip, and scale
+    new_image = np.maximum(new_image - offset, 0) / scale
     return new_image

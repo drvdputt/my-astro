@@ -16,6 +16,8 @@ class QRGB:
 
     rgb_method: str
         Options are "naive" and "lupton"
+
+    offsets: percentile to be subtracted from data
     """
 
     def __init__(self, images_array):
@@ -34,7 +36,6 @@ class QRGB:
         # normalization options
         self.clip_pmin = 0
         self.clip_pmax = 100
-        self.scale_pmin = 16
         self.scale_pmax = 84
         self.offsets = [0] * self.nc
 
@@ -86,13 +87,12 @@ class QRGB:
         kwargs = dict(
             clip_pmin=self.clip_pmin,
             clip_pmax=self.clip_pmax,
-            scale_pmin=self.scale_pmin,
             scale_pmax=self.scale_pmax,
         )
         output = np.zeros(self.images.shape)
         for i in range(self.nc):
             output[i] = image.normalize(
-                self.images[i], offset_p=self.offsets[i], **kwargs
+                self.images[i], offset_pmin=self.offsets[i], **kwargs
             )
 
         return output
