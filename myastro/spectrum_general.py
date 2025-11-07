@@ -83,6 +83,7 @@ def take_s1d_or_quantities(func):
     """
     Decorate function so that it can take either s1d or (wavelength, flux, uncertainty).
     """
+
     def decorated_func(
         *args, s1d=None, wavelength=None, flux=None, uncertainty=None, **kwargs
     ):
@@ -138,7 +139,7 @@ def write_ecsv(fn, wavelength, flux, uncertainty, **kwargs):
     t.add_column(wavelength, name="wavelength")
     t.add_column(flux, name="flux")
     if uncertainty is not None:
-        t.add_column(uncertainty.array * flux.unit, name='uncertainty')
+        t.add_column(uncertainty.array * flux.unit, name="uncertainty")
     t.write(fn, **kwargs)
 
 
@@ -171,7 +172,8 @@ def normalize(w, flux, wnorm, wnorm_bottom=None, ax=None):
     Returns
     -------
     dict: {'flux': normalized flux
-            'inorm': index of data point used to normalize}
+            'inorm': index of 'top' data point used to normalize
+            'inorm_bottom': index of 'bottom data point}
 
     """
     # as normalization factor, choose amplitude of feature at wnorm?
@@ -194,7 +196,8 @@ def normalize(w, flux, wnorm, wnorm_bottom=None, ax=None):
 
     factor = fnorm - offset
 
-    # probably better to have some sort of continuum subtraction, so that we can compare the amplitudes of the features.
+    # probably better to have some sort of continuum subtraction option,
+    # so that we can compare the amplitudes of the features.
     return {
         "flux": (flux - offset) / factor,
         "inorm": inorm,
