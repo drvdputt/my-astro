@@ -39,6 +39,23 @@ def slice_spectral_axis(s1d, mask):
     return s1d_new
 
 
+def in_wavelength_ranges_mask(w, wmin_wmax_pairs):
+    """
+    Create mask indicating all wavelengths that in any of the given wavelength ranges
+
+    Parameters
+    ----------
+
+    wmin_wmax_pairs : anything compatible with Nx2 array of floats
+      E.g, in tuples: ((wmin, wmax), ...)
+    """
+
+    in_range_p = np.full(len(w), False)
+    for wmin, wmax in wmin_wmax_pairs:
+        in_range_p = in_range_p | np.logical_and(wmin < w, w < wmax)
+    return in_range_p
+
+
 def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
     """Remove a list of wavelength ranges from a Spectrum1D.
 
@@ -53,11 +70,7 @@ def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
         Every wavelength range (in micron) that needs to be removed.
 
     """
-    to_remove = np.full(s1d.spectral_axis.shape, False)
-    for wmin, wmax in wmin_wmax_pairs:
-        to_remove = to_remove | mask_wavelength_range(
-            s1d, wmin * u.micron, wmax * u.micron
-        )
+    to_remove = in_wavelength_ranges_mask(s1d.spectral_axis.value, wmin_wmax_pairs)
     print(f"Removing {np.count_nonzero(to_remove)} wavelength points")
     return slice_spectral_axis(s1d, ~to_remove)
 

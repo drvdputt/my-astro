@@ -71,6 +71,7 @@ def jwst_query_mast(
             curl_flag=curl_flag,
             download_dir=save_folder,
         )
+    return dwld
 
 
 if __name__ == "__main__":

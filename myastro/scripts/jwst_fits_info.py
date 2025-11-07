@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """Open any file produced by the jwst pipeline and print out some info."""
 
-import sys
-
-print(sys.executable)
 from jwst import datamodels
 from argparse import ArgumentParser
-from pprint import pprint
 
 
 def main():
