@@ -65,7 +65,21 @@ def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
 def coadd(s1ds, new_spectral_axis=None):
     """Co-add any list of Spectrum1D objects.
 
-    If cubes, they need to have the same shapes (not supported for now)
+    In the wavelength directions, all wavelength grids are considered to
+    generate a suitable combined grid. All spectra are then interpolated
+    on this grid and summed.
+
+    Simple option to implement the grid: consider the average wavelength
+    spacing of each grid and take the finest one. "Smarter" option: set
+    up some sort of spectral point density curve, and use that to
+    generate a variable grid spacing.
+
+    But in regions where only one spectrum is provided, or where grids
+    are (near) identical, the generated points should be as close as
+    possible to the original...
+
+    If cubes, they need to have the same spatial shapes (not supported
+    for now)
 
     Parameters
     ----------
