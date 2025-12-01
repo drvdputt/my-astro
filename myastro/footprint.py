@@ -72,3 +72,7 @@ def make_sbc_rectangle(ra, dec):
     polygon_sky_region = make_rectangle_region(ra, dec, sbcx, sbcy)
     polygon_sky_region.write(fn, overwrite=True)
     return fn
+
+def make_spitzer_pixel(ra, dec):
+    spitzer_pixel_size = 1.8*u.arcsec
+    make_rectangle_region(ra, dec, spitzer_pixel_size, spitzer_pixel_size)
