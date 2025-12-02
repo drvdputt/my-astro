@@ -74,5 +74,5 @@ def make_sbc_rectangle(ra, dec):
     return fn
 
 def make_spitzer_pixel(ra, dec):
-    spitzer_pixel_size = 1.8*u.arcsec
-    make_rectangle_region(ra, dec, spitzer_pixel_size, spitzer_pixel_size)
+    spitzer_pixel_size = 3.6*u.arcsec
+    return make_rectangle_region(ra, dec, spitzer_pixel_size, spitzer_pixel_size)
