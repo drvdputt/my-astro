@@ -20,6 +20,10 @@ specutils = "*"
 stsynphot = "*"
 reproject = "^0.14.1"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.1"
+python-lsp-server = "^1.13.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

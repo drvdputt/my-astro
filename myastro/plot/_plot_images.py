@@ -1,35 +1,13 @@
-import numpy as np
-from matplotlib.colors import LogNorm
-import myastro.wcshacks
-from regions import SkyRegion
-from astropy import units as u
 import math
-from matplotlib import patheffects
-from matplotlib import pyplot as plt
-from matplotlib.colors import FuncNorm
-from myastro import regionhacks
-from matplotlib.ticker import AutoMinorLocator
+import numpy as np
+from regions import SkyRegion
+from matplotlib import pyplot as plt, ticker, colors
+from astropy import units as u
 
-# some useful kwarg collections
-text_white_black_outline_kwargs = {
-    "path_effects": [patheffects.withStroke(linewidth=2, foreground="k")],
-}
+from myastro import regionhacks, wcshacks
 
 
-def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
-    default_kwargs = dict(linewidth=0.5, drawstyle="steps")
-
-    w = s.spectral_axis.to(wav_unit).value
-    if offset is not None:
-        w -= offset
-    ax.plot(w, s.flux.value, **(default_kwargs | kwargs))
-
-    if add_labels:
-        ax.set_xlabel(f"wavelength ({s.spectral_axis.unit:latex_inline})")
-        ax.set_ylabel(f"flux ({s.flux.unit:latex_inline})")
-
-
-def region(
+def draw_region(
     ax,
     sky_region: SkyRegion,
     celestial_wcs,
@@ -55,33 +33,22 @@ def region(
     annotation_text: add text at the center of the region
 
     annotation_kwargs: arguments passed to annotate().
-       e.g. annotation_kwargs={'color':'r'} to make the text red.
+       e.g. annotation_kwargs={'color':'r'} to make the text red. The
+       same kwargs as a matplotlib "patch" are supported.
 
     """
     pix_region = sky_region.to_pixel(celestial_wcs)
     pix_region.plot(
         ax=ax,
-        # same kwargs as patch
         **kwargs,
     )
     if annotation_text is not None:
-        # ax.text(pix_region.center.x, pix_region.center.y, text, **text_kwargs)
         center = regionhacks.find_center(pix_region)
         ax.annotate(
             annotation_text,
             center,
             **annotation_kwargs,
         )
-
-
-def make_asinh_FuncNorm(scale, offset, cutoff):
-    def forward(x):
-        np.arcsinh(scale * (x - offset))
-
-    def reverse(y):
-        np.sinh(y) / scale + offset
-
-    return FuncNorm(functions=(forward, reverse), vmin=0, vmax=forward(cutoff))
 
 
 def nice_imshow(ax, a, log_color=False, **kwargs):
@@ -97,13 +64,15 @@ def nice_imshow(ax, a, log_color=False, **kwargs):
 
     if log_color:
         vmin = np.amin(a[a > 0])
-        all_kwargs["norm"] = LogNorm(vmin=vmin, vmax=all_kwargs.get("vmax", None))
+        all_kwargs["norm"] = colors.LogNorm(
+            vmin=vmin, vmax=all_kwargs.get("vmax", None)
+        )
 
     return ax.imshow(a, **all_kwargs)
 
 
-# create custom 2D colorbar
-# here's a good example https://stackoverflow.com/questions/49871436/scatterplot-with-continuous-bivariate-color-palette-in-python
+# create custom 2D colorbar. Here's a good example
+# https://stackoverflow.com/questions/49871436/scatterplot-with-continuous-bivariate-color-palette-in-python
 def bivariate_imshow(
     ax, Z1, Z2, cmap1=plt.cm.Blues, cmap2=plt.cm.Reds, cax=None, **imshow_kwargs
 ):
@@ -147,7 +116,7 @@ def bivariate_imshow(
 
 def rotated_imshow(ax, image_array, celestial_wcs, rotate_angle, **imshow_kwargs):
     """Rotate image and wcs, display and return them."""
-    image_rot, wcs_rot = myastro.wcshacks.rotate_image_and_wcs(
+    image_rot, wcs_rot = wcshacks.rotate_image_and_wcs(
         image_array, celestial_wcs, rotate_angle, autocrop=True
     )
     return {
@@ -155,10 +124,6 @@ def rotated_imshow(ax, image_array, celestial_wcs, rotate_angle, **imshow_kwargs
         "image": image_rot,
         "wcs": wcs_rot,
     }
-
-
-from myastro.wcshacks import xy_span_arcsec
-from matplotlib import ticker
 
 
 def physical_ticklabels(
@@ -195,7 +160,7 @@ def physical_ticklabels(
 
     """
     ny, nx = image_array.shape
-    span_x, span_y = xy_span_arcsec([nx, ny], celestial_wcs)
+    span_x, span_y = wcshacks.xy_span_arcsec([nx, ny], celestial_wcs)
     if verbose:
         print(f"Span is x: {span_x} and y: {span_y}")
     sx, sy = span_x.to(angle_unit).value, span_y.to(angle_unit).value
@@ -240,76 +205,16 @@ def physical_ticklabels(
     }
 
 
-def nice_ticks(ax):
-    ax.xaxis.set_minor_locator(AutoMinorLocator())
-    ax.yaxis.set_minor_locator(AutoMinorLocator())
-    ax.tick_params(
-        which="both", axis="both", top=True, bottom=True, left=True, right=True
-    )
-
-
-def nice_colorbar(fig, ax, mappable):
-    """Colorbar nicely next to plot. Works well with imshow.
-
-    Mappable is typically the image object returned by the imshow call.
-
-    https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph
-
-    """
-    cax = fig.add_axes(
-        [
-            ax.get_position().x1 + 0.01,
-            ax.get_position().y0,
-            0.02,
-            ax.get_position().height,
-        ]
-    )
-    cb = fig.colorbar(mappable, cax=cax)  # Similar to fig.colorbar(im, cax = cax)
-    return cb, cax
-
-
-def scatter_in_pixel_coords(
-    ax,
-    ras,
-    decs,
-    image_wcs,
-    scatter_kwargs={},
-    labels=None,
-):
-    """
-    labels: text labels to point at each point
-
-    """
-    # convert RA and DEC to the right XY coordinates for the image
-    coords = image_wcs.celestial.world_to_pixel_values(ras, decs)
-    x, y = coords[0], coords[1]
-
-    scatter = ax.scatter(x, y, **scatter_kwargs)
-
-    if labels is not None:
-        for i, l in enumerate(labels):
-            ax.annotate(l, (x[i], y[i]))
-
-    # choose a good zoom level
-    # xmin = np.amin(x)
-    # xmax = np.amax(x)
-    # xw = x_fudge * (xmax - xmin)
-    # xc = (xmax + xmin) / 2
-    # ymax = np.amax(y)
-    # ymin = np.amin(y)
-    # yw = y_fudge * (ymax - ymin)
-    # yc = (ymax + ymin) / 2
-    # ax.set_xlim(xc - xw / 2, xc + xw / 2)
-    # ax.set_ylim(yc - yw / 2, yc + yw / 2)
-    return {"scatter": scatter, "x": x, "y": y}
-
-
 def compass(
     ax, wcs2d, ra, dec, size_arcsec, with_NE_labels=False, **plot_region_kwargs
 ):
     """Draw simple compass
 
     Two right angle lines pointing to N an E.
+
+    BUG: for some reason, this function doesn't work. No errors are
+    produced, and nothing is drawn on ax. But when I copy-paste the
+    contents of this function directly in my notebook, it works fine.
 
     Parameters
     ----------
@@ -335,27 +240,15 @@ def compass(
     pair of regions: the two line segment regions that were plotted
 
     """
-    rs = regionhacks.make_compass_region(ra, dec, size_arcsec)
-
-    plot_region_kwargs.setdefault("color", "gray")
-
-    text_kwargs = {k: plot_region_kwargs.get(k, None) for k in ("color", "alpha")}
-
-    for r in rs:
-        region(ax, r, wcs2d, **plot_region_kwargs)
+    n, e = regionhacks.make_compass_region(ra, dec, size_arcsec)
+    draw_region(ax, n, wcs2d, color="r")
+    draw_region(ax, e, wcs2d, color="grey")
 
     if with_NE_labels:
-        text_at_coord(
-            ax,
-            rs[0].end,
-            "N",
-            wcs2d,
-            color=plot_region_kwargs["color"],
-            alpha=plot_region_kwargs["alpha"],
-        )
-        text_at_coord(ax, rs[1].end, "E", wcs2d, **text_kwargs)
+        text_at_coord(ax, n.end, "N", wcs2d, color="r")
+        text_at_coord(ax, e.end, "E", wcs2d, color="grey")
 
-    return rs
+    return n, e
 
 
 def text_at_coord(ax, coord, s, wcs2d, **kwargs):
@@ -376,3 +269,39 @@ def text_at_coord(ax, coord, s, wcs2d, **kwargs):
     """
     pixcoord = coord.to_pixel(wcs2d)
     return ax.text(pixcoord[0], pixcoord[1], s, **kwargs)
+
+
+def scatter_in_pixel_coords(
+    ax,
+    ras,
+    decs,
+    image_wcs,
+    scatter_kwargs={},
+    labels=None,
+):
+    """
+    labels: text labels to point at each point
+
+    """
+    # convert RA and DEC to the right XY coordinates for the image
+    coords = image_wcs.celestial.world_to_pixel_values(ras, decs)
+    x, y = coords[0], coords[1]
+
+    scatter = ax.scatter(x, y, **scatter_kwargs)
+
+    if labels is not None:
+        for i, lbl in enumerate(labels):
+            ax.annotate(lbl, (x[i], y[i]))
+
+    # choose a good zoom level
+    # xmin = np.amin(x)
+    # xmax = np.amax(x)
+    # xw = x_fudge * (xmax - xmin)
+    # xc = (xmax + xmin) / 2
+    # ymax = np.amax(y)
+    # ymin = np.amin(y)
+    # yw = y_fudge * (ymax - ymin)
+    # yc = (ymax + ymin) / 2
+    # ax.set_xlim(xc - xw / 2, xc + xw / 2)
+    # ax.set_ylim(yc - yw / 2, yc + yw / 2)
+    return {"scatter": scatter, "x": x, "y": y}

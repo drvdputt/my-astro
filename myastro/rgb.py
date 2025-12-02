@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib
+from IPython.display import display, Markdown
 
 
 def asinh_curve(image, scale, offset):

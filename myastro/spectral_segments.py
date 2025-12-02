@@ -22,7 +22,7 @@ def plot_merge_1d(ax, segments, merge_result, add_segments_with_offset=None):
     """
     color_it = cycle(("#66CCEE", "#228833", "#EE6677"))
     for s in segments:
-        plot.s1d(ax, s) #, color=next(color_it), alpha=0.9)
+        plot.s1d(ax, s, color=next(color_it), alpha=0.9)
         print("plotting segment")
 
     plot.s1d(ax, merge_result, color="k", linewidth=1)

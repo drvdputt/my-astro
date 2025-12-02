@@ -39,6 +39,23 @@ def slice_spectral_axis(s1d, mask):
     return s1d_new
 
 
+def in_wavelength_ranges_mask(w, wmin_wmax_pairs):
+    """
+    Create mask indicating all wavelengths that in any of the given wavelength ranges
+
+    Parameters
+    ----------
+
+    wmin_wmax_pairs : anything compatible with Nx2 array of floats
+      E.g, in tuples: ((wmin, wmax), ...)
+    """
+
+    in_range_p = np.full(len(w), False)
+    for wmin, wmax in wmin_wmax_pairs:
+        in_range_p = in_range_p | np.logical_and(wmin < w, w < wmax)
+    return in_range_p
+
+
 def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
     """Remove a list of wavelength ranges from a Spectrum1D.
 
@@ -53,11 +70,7 @@ def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
         Every wavelength range (in micron) that needs to be removed.
 
     """
-    to_remove = np.full(s1d.spectral_axis.shape, False)
-    for wmin, wmax in wmin_wmax_pairs:
-        to_remove = to_remove | mask_wavelength_range(
-            s1d, wmin * u.micron, wmax * u.micron
-        )
+    to_remove = in_wavelength_ranges_mask(s1d.spectral_axis.value, wmin_wmax_pairs)
     print(f"Removing {np.count_nonzero(to_remove)} wavelength points")
     return slice_spectral_axis(s1d, ~to_remove)
 
@@ -65,7 +78,21 @@ def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
 def coadd(s1ds, new_spectral_axis=None):
     """Co-add any list of Spectrum1D objects.
 
-    If cubes, they need to have the same shapes (not supported for now)
+    In the wavelength directions, all wavelength grids are considered to
+    generate a suitable combined grid. All spectra are then interpolated
+    on this grid and summed.
+
+    Simple option to implement the grid: consider the average wavelength
+    spacing of each grid and take the finest one. "Smarter" option: set
+    up some sort of spectral point density curve, and use that to
+    generate a variable grid spacing.
+
+    But in regions where only one spectrum is provided, or where grids
+    are (near) identical, the generated points should be as close as
+    possible to the original...
+
+    If cubes, they need to have the same spatial shapes (not supported
+    for now)
 
     Parameters
     ----------
@@ -83,6 +110,7 @@ def take_s1d_or_quantities(func):
     """
     Decorate function so that it can take either s1d or (wavelength, flux, uncertainty).
     """
+
     def decorated_func(
         *args, s1d=None, wavelength=None, flux=None, uncertainty=None, **kwargs
     ):
@@ -138,7 +166,7 @@ def write_ecsv(fn, wavelength, flux, uncertainty, **kwargs):
     t.add_column(wavelength, name="wavelength")
     t.add_column(flux, name="flux")
     if uncertainty is not None:
-        t.add_column(uncertainty.array * flux.unit, name='uncertainty')
+        t.add_column(uncertainty.array * flux.unit, name="uncertainty")
     t.write(fn, **kwargs)
 
 
@@ -171,7 +199,8 @@ def normalize(w, flux, wnorm, wnorm_bottom=None, ax=None):
     Returns
     -------
     dict: {'flux': normalized flux
-            'inorm': index of data point used to normalize}
+            'inorm': index of 'top' data point used to normalize
+            'inorm_bottom': index of 'bottom data point}
 
     """
     # as normalization factor, choose amplitude of feature at wnorm?
@@ -194,7 +223,8 @@ def normalize(w, flux, wnorm, wnorm_bottom=None, ax=None):
 
     factor = fnorm - offset
 
-    # probably better to have some sort of continuum subtraction, so that we can compare the amplitudes of the features.
+    # probably better to have some sort of continuum subtraction option,
+    # so that we can compare the amplitudes of the features.
     return {
         "flux": (flux - offset) / factor,
         "inorm": inorm,
