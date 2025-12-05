@@ -53,6 +53,7 @@ def update_crval(wcs, measured_coord, true_coord):
     wcs_new.wcs.crval[1] = crval_coord_new.dec.value
     return wcs_new
 
+
 def rotate_image_and_wcs(
     image_array, celestial_wcs: WCS, rotate_angle, autocrop, manual_crop=None
 ):

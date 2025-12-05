@@ -9,9 +9,10 @@ from astropy.nddata import StdDevUncertainty
 from copy import deepcopy
 from jwst.datamodels import IFUCubeModel
 from jwst.assign_wcs.pointing import create_fitswcs
+from specutils import Spectrum
 
 
-def collapse_flux_and_unc(s3d):
+def collapse_flux_and_unc(s3d: Spectrum):
     """
 
     s3d: 3D Spectrum cube with uncertainty
@@ -28,15 +29,17 @@ def collapse_flux_and_unc(s3d):
     return spec_avg
 
 
-def clean_spikes(s3d):
+def clean_spikes(s3d: Spectrum):
     """Some rules to mask out the worst of the spikes in the data"""
     spec2 = deepcopy(s3d)
     f = spec2.flux.value
     u = spec2.uncertainty.array
-    median_per_slice = np.array(
-        [np.nanmedian(f[..., i][f[..., i] > 0]) for i in range(f.shape[2])]
+    median_per_slice = np.nanmedian(f, axis=s3d.spectral_axis_index)
+    spatial_indices = tuple(i for i in range(f.ndim) if i != s3d.spectral_axis_index)
+    # broadcasting along arbitrary axis
+    too_big = np.abs(f) > 125 * np.expand_dims(
+        np.abs(median_per_slice), axis=spatial_indices
     )
-    too_big = np.abs(f) > 125 * np.abs(median_per_slice)[np.newaxis, np.newaxis, :]
     zero_unc = u <= 0
     bad_unc = ~np.isfinite(u)
 
@@ -54,11 +57,12 @@ def write_cube_s1d_wavetab_jwst_s3d_format(fits_fn, s3d, celestial_wcs):
     Only works for MJy / sr flux and micron wavelengths at the moment.
 
     """
-    # needs (w, y, x), spectrum1d has (x, y, w) -> swap -1 and 0
+    # move spectral axis first (wcs stuff in the function below assumes this)
+    windex = s3d.spectra_axis_index
     write_cube_wavetab_jwst_s3d_format(
         fits_fn,
-        flux_array=np.swapaxes(s3d.flux.value, -1, 0),
-        unc_array=np.swapaxes(s3d.uncertainty.array, -1, 0),
+        flux_array=np.moveaxis(s3d.flux.value, windex, 0),
+        unc_array=np.moveaxis(s3d.uncertainty.array, windex, 0),
         wav_array=s3d.spectral_axis.value,
         celestial_wcs=celestial_wcs,
     )

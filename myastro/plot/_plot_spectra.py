@@ -1,9 +1,11 @@
 """Plotting functions specific for spectra"""
+
 from myastro.plot._colors import MY_COLOR_CYCLE
 from myastro import spectrum_general
 
 import numpy as np
 from astropy import units as u
+
 
 def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
     """My favorite default way to plot a spectrum
@@ -16,6 +18,9 @@ def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
     wav_unit : Unit
         Change spectral axis unit before plotting
     """
+    if s.flux.ndim > 1:
+        raise NotImplementedError("spectral cubes not supported by plotting functions")
+
     default_kwargs = dict(linewidth=0.5, drawstyle="steps")
 
     w = s.spectral_axis.to(wav_unit).value

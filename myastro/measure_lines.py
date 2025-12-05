@@ -12,7 +12,7 @@ import astropy.units as u
 from pahfit.instrument import fwhm
 from astropy.modeling.functional_models import Gaussian1D
 from astropy.modeling.polynomial import Polynomial1D
-from myastro import plot
+from myastro import plot, spectrum_general
 from copy import deepcopy
 
 UWAV = u.micron
@@ -38,7 +38,12 @@ def integrate_spectrum(s, wmin=None, wmax=None):
     else:
         imax = np.searchsorted(wavs, wmax.to(wunit).value)
 
-    integral = np.trapz(s.flux.value[..., imin:imax], wavs[imin:imax], axis=-1)
+    wslice = slice(imin, imax)
+    integral = np.trapz(
+        s.flux.value.take(wslice, axis=s.spectral_axis_index),
+        wavs[wslice],
+        axis=-1,
+    )
     return integral * s.flux.unit * wunit
 
 
@@ -280,6 +285,7 @@ def line_continuum_and_flux(s1d_per_lambda, center, fwhm_micron=None, s1d_for_un
          "peak_wav": measured wavelength of peak of line
 
     """
+    spectrum_general.raise_error_spectral_axis_not_last(s1d_per_lambda)
     if fwhm_micron is None:
         fwhm = theoretical_fwhm([center])[0]
     else:
