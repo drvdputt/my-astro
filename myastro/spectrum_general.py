@@ -7,6 +7,16 @@ from astropy.table import Table
 from astropy.nddata import StdDevUncertainty
 
 
+def raise_error_1d_only(s):
+    if s.flux.ndim > 1:
+        raise NotImplementedError("Spectral cubes are not supported here")
+
+
+def raise_error_spectral_axis_not_last(s):
+    if s.spectral_axis_index != s.flux.ndim - 1:
+        raise NotImplementedError("Only Spectrum with spectral axis last is supported")
+
+
 def mask_wavelength_range(s1d, wmin, wmax):
     return np.logical_and(wmin < s1d.spectral_axis, s1d.spectral_axis < wmax)
 
@@ -31,9 +41,13 @@ def slice_spectral_axis(s1d, mask):
 
     """
     s1d_new = Spectrum(
-        s1d.flux[mask],
+        s1d.flux.take(mask, axis=s1d.spectral_axis_index),
         s1d.spectral_axis[mask],
-        uncertainty=None if s1d.uncertainty is None else s1d.uncertainty[mask],
+        uncertainty=(
+            None
+            if s1d.uncertainty is None
+            else s1d.uncertainty.take(mask, axis=s1d.spectral_axis_index)
+        ),
     )
     s1d_new.meta = s1d.meta
     return s1d_new
