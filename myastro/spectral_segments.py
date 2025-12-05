@@ -317,7 +317,6 @@ def merge_nd(ss):
 
     """
     # for now, this only works for (w, y, x)
-    check_spectral_axis_index(ss[0])
     spindex = ss[0].spectral_axis_index
 
     # find the wavelength regions where the segments overlap
