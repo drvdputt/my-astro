@@ -10,7 +10,7 @@ from astropy import units as u
 def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
     """My favorite default way to plot a spectrum
 
-    s : Spectrum1D
+    s : Spectrum
 
     add_labels : bool
         Add wavelength and flux labels to ax, with units
