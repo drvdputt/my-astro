@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 @dataclass
 class Spectrum:
-    """Simple container because Spectrum1D is too specialized and slow"""
+    """Simple container because Spectrum is too specialized and slow"""
 
     w: np.ndarray
     f: np.ndarray

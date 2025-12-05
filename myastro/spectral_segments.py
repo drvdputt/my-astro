@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from astropy.nddata import StdDevUncertainty
-from specutils import Spectrum1D
+from specutils import Spectrum
 from myastro import plot
 from itertools import cycle
 
@@ -12,9 +12,9 @@ def plot_merge_1d(ax, segments, merge_result, add_segments_with_offset=None):
     Parameters
     ----------
 
-    segments: list of Spectrum1D
+    segments: list of Spectrum
 
-    merge_result: Spectrum1D
+    merge_result: Spectrum
 
     add_segments_with_offset: None or flux quantity
         plot the segments a second time, with an added flux offset for readability
@@ -43,7 +43,7 @@ def find_overlap_ranges(ss):
     Parameters
     ----------
 
-    ss: list of Spectrum1D
+    ss: list of Spectrum
         Assumes that the spectra are already sorted, and that each
         spectral segment overlaps only with the previous and
         the next in the list.
@@ -211,7 +211,7 @@ def overlap_ratios(ss, full_output=False):
 
 
 def merge_1d(ss):
-    """Merge a list of sorted Spectrum1D (no 2D or 3D supported for now)
+    """Merge a list of sorted Spectrum (no 2D or 3D supported for now)
 
     Uses a sliding merge for a smooth transition, and assuming that the
     orders are already flux-matched.
@@ -221,11 +221,11 @@ def merge_1d(ss):
 
     Parameters
     ----------
-    ss: sorted segments (list of Spectrum1D)
+    ss: sorted segments (list of Spectrum)
 
     Returns
     -------
-    Spectrum1D
+    Spectrum
 
     """
     # find the wavelength regions where the segments overlap
@@ -283,23 +283,23 @@ def merge_1d(ss):
     new_uncertainty_count = np.count_nonzero(np.isfinite([a for a in unc_new]), axis=0)
     new_uncertainty = StdDevUncertainty(new_uncertainty_sum / new_uncertainty_count)
 
-    return Spectrum1D(
+    return Spectrum(
         flux_merged * ss[0].flux.unit, new_spectral_axis, uncertainty=new_uncertainty
     )
 
 
 def merge_nd(ss):
-    """Merge a list of sorted (by wavelength) Spectrum1D segments
+    """Merge a list of sorted (by wavelength) Spectrum segments
 
     This is a generalized version of merge_1d
 
     Parameters
     ----------
-    ss: sorted segments (list of Spectrum1D), of same spatial shape
+    ss: sorted segments (list of Spectrum), of same spatial shape
 
     Returns
     -------
-    Spectrum1D
+    Spectrum
 
     """
     # find the wavelength regions where the segments overlap
@@ -360,7 +360,7 @@ def merge_nd(ss):
     new_uncertainty_count = np.count_nonzero(np.isfinite([a for a in unc_new]), axis=0)
     new_uncertainty = StdDevUncertainty(new_uncertainty_sum / new_uncertainty_count)
 
-    return Spectrum1D(
+    return Spectrum(
         flux_merged * ss[0].flux.unit, new_spectral_axis, uncertainty=new_uncertainty
     )
 
@@ -374,17 +374,17 @@ def merge_nd_memfriendly(ss):
     It is also much faster, and the uncertainty algorithm works slightly
     differently.
 
-    Merge a list of sorted (by wavelength) Spectrum1D segments
+    Merge a list of sorted (by wavelength) Spectrum segments
 
     This is a generalized version of merge_1d
 
     Parameters
     ----------
-    ss: sorted segments (list of Spectrum1D), of same spatial shape
+    ss: sorted segments (list of Spectrum), of same spatial shape
 
     Returns
     -------
-    Spectrum1D
+    Spectrum
 
     """
     # find the wavelength regions where the segments overlap
@@ -491,7 +491,7 @@ def merge_nd_memfriendly(ss):
         # and new right will be calculated next loop
         iright += 1
 
-    return Spectrum1D(
+    return Spectrum(
         flux_merged * ss[0].flux.unit,
         new_spectral_axis,
         uncertainty=StdDevUncertainty(np.sqrt(unc2_merged)),
