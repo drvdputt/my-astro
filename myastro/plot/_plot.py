@@ -10,6 +10,7 @@ text_white_black_outline_kwargs = {
     "path_effects": [patheffects.withStroke(linewidth=2, foreground="k")],
 }
 
+
 def make_asinh_FuncNorm(scale, offset, cutoff):
     def forward(x):
         np.arcsinh(scale * (x - offset))
@@ -19,12 +20,14 @@ def make_asinh_FuncNorm(scale, offset, cutoff):
 
     return FuncNorm(functions=(forward, reverse), vmin=0, vmax=forward(cutoff))
 
+
 def nice_ticks(ax):
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
     ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
     ax.tick_params(
         which="both", axis="both", top=True, bottom=True, left=True, right=True
     )
+
 
 def nice_colorbar(fig, ax, mappable):
     """Colorbar nicely next to plot. Works well with imshow.
@@ -44,5 +47,3 @@ def nice_colorbar(fig, ax, mappable):
     )
     cb = fig.colorbar(mappable, cax=cax)  # Similar to fig.colorbar(im, cax = cax)
     return cb, cax
-
-

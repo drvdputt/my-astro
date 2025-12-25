@@ -1,9 +1,11 @@
 """Plotting functions specific for spectra"""
+
 from myastro.plot._colors import MY_COLOR_CYCLE
 from myastro import spectrum_general
 
 import numpy as np
 from astropy import units as u
+
 
 def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
     """My favorite default way to plot a spectrum

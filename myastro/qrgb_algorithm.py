@@ -1,6 +1,3 @@
-"""This a a place to put the whole thing (a bit too extensive for
-myastro, at least until this repo+mystro get merged."""
-
 import matplotlib
 from astropy.nddata import CCDData
 import reproject
@@ -119,6 +116,9 @@ class QRGB:
         elif self.rgb_method == "naive":
             rgb_uint8 = rgb.make_naive_rgb(r, g, b, stretch=self.stretch, Q=self.Q)
         else:
-            raise "unsupported color method"
+            raise ValueError(
+                f"{self.rgb_method} is not a supported color method."
+                'Options are "lupton" and "naive".'
+            )
 
         return rgb_uint8
