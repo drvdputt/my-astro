@@ -23,6 +23,7 @@ reproject = "^0.14.1"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.14.1"
 python-lsp-server = "^1.13.1"
+ty = "^0.0.7"
 
 [build-system]
 requires = ["poetry-core"]
