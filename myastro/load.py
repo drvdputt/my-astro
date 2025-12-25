@@ -3,7 +3,7 @@ that globs and sorts the 12 MIRI cubes
 
 """
 
-from specutils import Spectrum1D
+from specutils import Spectrum
 from pathlib import Path
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -18,7 +18,7 @@ def get_cubes(d, suffix="s3d.fits"):
     Useful for loading all 12 miri MRS segments.
     """
     cubes = sorted(
-        [Spectrum1D.read(f) for f in Path(d).glob("*" + suffix)],
+        [Spectrum.read(f) for f in Path(d).glob("*" + suffix)],
         key=lambda x: x.spectral_axis.value[0],
     )
     if len(cubes) == 0:
@@ -33,7 +33,7 @@ def stis_sx2(fn):
         hdul.info()
         sci = hdul["SCI"]
         bunit = u.Unit(sci.header["BUNIT"])
-        s = Spectrum1D(
+        s = Spectrum(
             sci.data * bunit,
             wcs=WCS(sci),
             uncertainty=StdDevUncertainty(hdul["ERR"].data * bunit),
@@ -51,15 +51,15 @@ def iue(fn):
 
     Returns
     -------
-    Spectrum1D
+    Spectrum
 
     """
     # The astropy table reader does something useful here, but the
     # format is a bit weird. We repackage the spectrum here as a
-    # Spectrum1D objec.t
+    # Spectrum objec.t
     t = Table.read(fn)
     flux = t["FLUX"].quantity[0]
     spectral_axis = t["WAVE"].quantity[0]
     # ensure that flux and uncertainty are in the same unit here
     uncertainty = StdDevUncertainty(t["SIGMA"].quantity[0].to(flux.unit))
-    return Spectrum1D(flux, spectral_axis, uncertainty=uncertainty)
+    return Spectrum(flux, spectral_axis, uncertainty=uncertainty)

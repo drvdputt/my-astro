@@ -10,7 +10,7 @@ from astropy import units as u
 def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
     """My favorite default way to plot a spectrum
 
-    s : Spectrum1D
+    s : Spectrum
 
     add_labels : bool
         Add wavelength and flux labels to ax, with units
@@ -18,6 +18,9 @@ def s1d(ax, s, add_labels=True, offset=None, wav_unit=u.micron, **kwargs):
     wav_unit : Unit
         Change spectral axis unit before plotting
     """
+    if s.flux.ndim > 1:
+        raise NotImplementedError("spectral cubes not supported by plotting functions")
+
     default_kwargs = dict(linewidth=0.5, drawstyle="steps")
 
     w = s.spectral_axis.to(wav_unit).value

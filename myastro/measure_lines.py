@@ -12,7 +12,7 @@ import astropy.units as u
 from pahfit.instrument import fwhm
 from astropy.modeling.functional_models import Gaussian1D
 from astropy.modeling.polynomial import Polynomial1D
-from myastro import plot
+from myastro import plot, spectrum_general
 from copy import deepcopy
 
 UWAV = u.micron
@@ -38,7 +38,12 @@ def integrate_spectrum(s, wmin=None, wmax=None):
     else:
         imax = np.searchsorted(wavs, wmax.to(wunit).value)
 
-    integral = np.trapz(s.flux.value[..., imin:imax], wavs[imin:imax], axis=-1)
+    wslice = slice(imin, imax)
+    integral = np.trapz(
+        s.flux.value.take(wslice, axis=s.spectral_axis_index),
+        wavs[wslice],
+        axis=-1,
+    )
     return integral * s.flux.unit * wunit
 
 
@@ -83,7 +88,7 @@ def spectral_amplitude_to_line_flux(amps, wavs):
 
 
 def s1d_sorted_slice(s1d, wmin, wmax):
-    """Spectrum1D slicing is slow. Make it faster by assuming that the
+    """Spectrum slicing is slow. Make it faster by assuming that the
     wavelengths are sorted"""
     imin = np.searchsorted(s1d.spectral_axis.value, wmin)
     imax = np.searchsorted(s1d.spectral_axis.value, wmax)
@@ -116,7 +121,7 @@ def line_neighbourhood_unc(
 
     Parameters
     ----------
-    s1d_per_lambda : Spectrum1D
+    s1d_per_lambda : Spectrum
         Again, in per-wavelength units. Otherwise integrating doesn't
         make sense.
 
@@ -256,7 +261,7 @@ def line_continuum_and_flux(s1d_per_lambda, center, fwhm_micron=None, s1d_for_un
     Parameters
     ----------
 
-    s1d_per_lamba: Spectrum1D
+    s1d_per_lamba: Spectrum
         needs to be in per micron units for everything to make sense!
 
     center: float
@@ -266,7 +271,7 @@ def line_continuum_and_flux(s1d_per_lambda, center, fwhm_micron=None, s1d_for_un
         width of the line to assume. By default, a suitable FWHM will be
         derived using the MIRI resolution curve model from PAHFIT.
 
-    s1d_for_unc: Spectrum1D
+    s1d_for_unc: Spectrum
         use a different spectrum (e.g. one with lines removed) to
         estimate the uncertainty in windows near the line. By default, uses a copy of s1d_per_lambda
 
@@ -280,6 +285,7 @@ def line_continuum_and_flux(s1d_per_lambda, center, fwhm_micron=None, s1d_for_un
          "peak_wav": measured wavelength of peak of line
 
     """
+    spectrum_general.raise_error_spectral_axis_not_last(s1d_per_lambda)
     if fwhm_micron is None:
         fwhm = theoretical_fwhm([center])[0]
     else:

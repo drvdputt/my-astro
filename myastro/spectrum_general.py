@@ -1,10 +1,20 @@
 """Tools that work on both regular spectra and cubes"""
 
-from specutils import Spectrum1D
+from specutils import Spectrum
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from astropy.nddata import StdDevUncertainty
+
+
+def raise_error_1d_only(s):
+    if s.flux.ndim > 1:
+        raise NotImplementedError("Spectral cubes are not supported here")
+
+
+def raise_error_spectral_axis_not_last(s):
+    if s.spectral_axis_index != s.flux.ndim - 1:
+        raise NotImplementedError("Only Spectrum with spectral axis last is supported")
 
 
 def mask_wavelength_range(s1d, wmin, wmax):
@@ -14,12 +24,12 @@ def mask_wavelength_range(s1d, wmin, wmax):
 def slice_spectral_axis(s1d, mask):
     """Arbitrary slice of spectral axis using boolean mask
 
-    Remove data points from a Spectrum1D object according to the given
+    Remove data points from a Spectrum object according to the given
     wavelength mask.
 
     Parameters
     ----------
-    spec: Spectrum1D
+    spec: Spectrum
 
     mask: bool array same size as spec wavelength axis
         True means to keep the data for that wavelength
@@ -27,13 +37,17 @@ def slice_spectral_axis(s1d, mask):
     Returns
     -------
 
-    Spectrum1D object with sliced flux, spectral axis, uncertainty, and a copy of the original metadata.
+    Spectrum object with sliced flux, spectral axis, uncertainty, and a copy of the original metadata.
 
     """
-    s1d_new = Spectrum1D(
-        s1d.flux[mask],
+    s1d_new = Spectrum(
+        s1d.flux.take(mask, axis=s1d.spectral_axis_index),
         s1d.spectral_axis[mask],
-        uncertainty=None if s1d.uncertainty is None else s1d.uncertainty[mask],
+        uncertainty=(
+            None
+            if s1d.uncertainty is None
+            else s1d.uncertainty.take(mask, axis=s1d.spectral_axis_index)
+        ),
     )
     s1d_new.meta = s1d.meta
     return s1d_new
@@ -57,14 +71,14 @@ def in_wavelength_ranges_mask(w, wmin_wmax_pairs):
 
 
 def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
-    """Remove a list of wavelength ranges from a Spectrum1D.
+    """Remove a list of wavelength ranges from a Spectrum.
 
     This is a common task applied before fitting a spectrum.
 
     Parameters
     ----------
 
-    s1d: Spectrum1D
+    s1d: Spectrum
 
     wmin_wmax_pairs: list of (float, float)
         Every wavelength range (in micron) that needs to be removed.
@@ -76,7 +90,7 @@ def remove_wavelength_ranges(s1d, wmin_wmax_pairs):
 
 
 def coadd(s1ds, new_spectral_axis=None):
-    """Co-add any list of Spectrum1D objects.
+    """Co-add any list of Spectrum objects.
 
     In the wavelength directions, all wavelength grids are considered to
     generate a suitable combined grid. All spectra are then interpolated
@@ -97,7 +111,7 @@ def coadd(s1ds, new_spectral_axis=None):
     Parameters
     ----------
 
-    s1ds: list of Spectrum1D
+    s1ds: list of Spectrum
 
     new_spectral_axis: new wavelength grid. In the future, I want this
     to be somewhat automatic if None is chosen.
@@ -144,7 +158,7 @@ def write_ascii_etc(fn, wavelength, flux, uncertainty):
 def write_ecsv(fn, wavelength, flux, uncertainty, **kwargs):
     """Write spectrum (in astropy quantities) to ecsv file
 
-    s1d: Spectrum1D
+    s1d: Spectrum
         If not given, then the individual wavelength, flux, uncertainty
         arguments should be used.
 
@@ -172,7 +186,7 @@ def write_ecsv(fn, wavelength, flux, uncertainty, **kwargs):
 
 def read_ecsv(fn):
     t = Table.read(fn)
-    return Spectrum1D(
+    return Spectrum(
         t["flux"].quantity,
         t["wavelength"].quantity,
         uncertainty=(

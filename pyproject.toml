@@ -16,7 +16,7 @@ matplotlib = "*"
 photutils = "*"
 regions = "*"
 scipy = "*"
-specutils = "<2.0"
+specutils = ">2.0"
 stsynphot = "*"
 reproject = "^0.14.1"
 
