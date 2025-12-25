@@ -1,33 +1,35 @@
-[tool.poetry]
+[project]
 name = "myastro"
 version = "0.1.0"
 description = "Various astronomy tools for my papers"
-authors = ["Dries Van De Putte <dvandepu@uwo.ca>"]
-license = "LICENSE"
+authors = [{ name = "Dries Van De Putte", email = "dvandepu@uwo.ca" }]
+requires-python = ">=3.11"
 readme = "README.md"
+license = "LICENSE"
+dependencies = [
+    "astropy",
+    "astroquery",
+    "jdaviz",
+    "jwst>=1.15.0",
+    "matplotlib",
+    "photutils",
+    "regions",
+    "scipy",
+    "specutils>2.0",
+    "stsynphot",
+    "reproject>=0.14.1,<0.15",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.11"
-astropy = "*"
-astroquery = "*"
-jdaviz = "*"
-jwst = ">=1.15.0"
-matplotlib = "*"
-photutils = "*"
-regions = "*"
-scipy = "*"
-specutils = ">2.0"
-stsynphot = "*"
-reproject = "^0.14.1"
+[project.scripts]
+jwst_fits_info = "myastro.scripts.jwst_fits_info:main"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.14.1"
-python-lsp-server = "^1.13.1"
-ty = "^0.0.7"
+[dependency-groups]
+dev = [
+    "ruff>=0.14.1,<0.15",
+    "python-lsp-server>=1.13.1,<2",
+    "ty>=0.0.7,<0.0.8",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-jwst_fits_info = 'myastro.scripts.jwst_fits_info:main'
+requires = ["hatchling"]
+build-backend = "hatchling.build"
