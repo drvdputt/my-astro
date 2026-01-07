@@ -44,8 +44,8 @@ def compare_profiles(
 
     See arguments of spectrum_general.normalize
 
-    TODO: describe parameters and allow more than two 'flux' arguments
-    (need to work on color/linestyle stuff for that)
+    TODO: improve for case of more than two flux arrays. Need to work on
+    color/linestyle stuff for that.
 
     """
     w = wavelength
