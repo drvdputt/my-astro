@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum
-from myastro import plot, spectrum_general
+from myastro import plot, spectrum_general, cube
 from itertools import cycle
 
 
@@ -316,8 +316,8 @@ def merge_nd(ss):
     Spectrum
 
     """
-    # for now, this only works for (w, y, x)
     spindex = ss[0].spectral_axis_index
+    spatial_indices = cube.get_spatial_indices(ss[0])
 
     # find the wavelength regions where the segments overlap
     overlap_ranges = find_overlap_ranges(ss)
@@ -357,7 +357,7 @@ def merge_nd(ss):
         slc = [slice(None)] * ss[0].flux.ndim
         # put wavelength mask at the right index
         slc[spindex] = wmask
-        return slc
+        return tuple(slc)
 
     def interp_f(s, wmask):
         return interp1d(
@@ -412,8 +412,13 @@ def merge_nd(ss):
         # overwrite overlap part
         wmask_overlap = wmask_left & wmask_right
 
-        # sliding weight weight(w) = 0 at wmin, 1 at wmax
-        sliding_weight = (new_spectral_axis[wmask_overlap] - wmin) / (wmax - wmin)
+        # sliding weight weight(w) = 0 at wmin, 1 at wmax. With shape
+        # changed to hint broadcasting over spatial axes of flux array
+        # to be compatible with flux array.
+        sliding_weight = np.expand_dims(
+            (new_spectral_axis[wmask_overlap] - wmin) / (wmax - wmin),
+            axis=spatial_indices,
+        )
         N_overlap = len(sliding_weight)
         last_N = wslice(slice(-N_overlap, None))
         first_N = wslice(slice(0, N_overlap))
