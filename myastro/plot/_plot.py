@@ -36,6 +36,9 @@ def nice_colorbar(fig, ax, mappable):
 
     https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph
 
+    Returns
+    -------
+    colorbar, axes
     """
     cax = fig.add_axes(
         [
