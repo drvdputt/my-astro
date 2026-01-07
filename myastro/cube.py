@@ -11,6 +11,8 @@ from jwst.datamodels import IFUCubeModel
 from jwst.assign_wcs.pointing import create_fitswcs
 from specutils import Spectrum
 
+def get_spatial_indices(s3d):
+    return tuple(i for i in range(s3d.flux.ndim) if i != s3d.spectral_axis_index)
 
 def collapse_flux_and_unc(s3d: Spectrum):
     """
@@ -35,10 +37,9 @@ def clean_spikes(s3d: Spectrum):
     f = spec2.flux.value
     u = spec2.uncertainty.array
     median_per_slice = np.nanmedian(f, axis=s3d.spectral_axis_index)
-    spatial_indices = tuple(i for i in range(f.ndim) if i != s3d.spectral_axis_index)
     # broadcasting along arbitrary axis
     too_big = np.abs(f) > 125 * np.expand_dims(
-        np.abs(median_per_slice), axis=spatial_indices
+        np.abs(median_per_slice), axis=get_spatial_indices(s3d)
     )
     zero_unc = u <= 0
     bad_unc = ~np.isfinite(u)
