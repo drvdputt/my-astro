@@ -56,11 +56,12 @@ The other module names may not be as obvious. Here is a quick legend.
 
 ## Dev tool notes
 
-- Recently migrated from poetry to uv
-- Added some dev dependencies: ruff, ty (new language server to try out)
+Recently migrated from poetry to uv
 
-Check the code and automatic fixes: `ruff check --fix`
+Check the code and automatic fixes: `uv run ruff check --fix`
 
-Format the code: `black myastro/`
+Format the code: `uv run black myastro/`
 
-Run scripts: e.g. `uv run python3 myastro/scripts/jwst_fits_info.py`
+Run scripts: e.g. `uv run myastro/scripts/jwst_fits_info.py`
+
+Or from another directory: `uv run --with /path/to/myastro /path/to/myastro/myastro/scripts/jwst_fits.info.py`
