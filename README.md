@@ -53,3 +53,14 @@ The other module names may not be as obvious. Here is a quick legend.
   FITS images, on top of a background FITS image.
 - `wcshacks`: Read and edit WCS objects. Highlights: rotate an image and create
   new WCS that matches the result, compute field of view size.
+
+## Dev tool notes
+
+- Recently migrated from poetry to uv
+- Added some dev dependencies: ruff, ty (new language server to try out)
+
+Check the code and automatic fixes: `ruff check --fix`
+
+Format the code: `black myastro/`
+
+Run scripts: e.g. `uv run python3 myastro/scripts/jwst_fits_info.py`
