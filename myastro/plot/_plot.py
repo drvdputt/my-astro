@@ -36,6 +36,8 @@ def nice_colorbar(fig, ax, mappable):
 
     https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph
 
+    Do this at the end, it messes up when e.g. tight_layout is applied
+
     Returns
     -------
     colorbar, axes
