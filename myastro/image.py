@@ -12,6 +12,9 @@ astropy.nddata? They have a wcs property which is useful.
 from myastro import plot
 from matplotlib import pyplot as plt
 import numpy as np
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
+from astropy.wcs.utils import proj_plane_pixel_scales
 
 
 def plot_many(images, ncols=1, **kwargs):
@@ -99,3 +102,41 @@ def normalize(image, clip_pmin=0, clip_pmax=100, offset_pmin=0, scale_pmax=84):
     # apply offset, zero clip, and scale
     new_image = np.maximum(new_image - offset, 0) / scale
     return new_image
+
+def map_extent(array, wcs: WCS, ref_coord: SkyCoord = None):
+    """Return an extent for imshow that represents distance on sky in arcsec.
+
+    Parameters
+    ----------
+
+    array : shape wil be used to determine number of pixels
+
+    wcs : needed to determine pixel scale
+
+    ref_coord : SkyCoord
+        Useful to represent distance to a star along the data axes. Will
+        calculate x,y position of star, convert that to arcsec using
+        pixel scale then add those as offsets to the extent.
+
+    """
+
+    # pix_scale = wcs.wcs.cdelt[0] * 3600
+    pix_scale_xy = proj_plane_pixel_scales(wcs) * 3600
+    # usually square so could be wrong about x and y order but probably
+    # will not matter.
+    extent = (
+        0,
+        pix_scale_xy[0] * array.shape[1],
+        0,
+        pix_scale_xy[1] * array.shape[0],
+    )
+
+    if ref_coord is not None:
+        px, py = wcs.world_to_pixel(ref_coord)
+        dx = float(px) * pix_scale_xy[0]
+        dy = float(py) * pix_scale_xy[1]
+        extent = (extent[0] - dx, extent[1] - dx, extent[2] - dy, extent[3] - dy)
+        print("new extent after applying ref coord", ref_coord, px, py, "is", extent)
+
+    return extent
+

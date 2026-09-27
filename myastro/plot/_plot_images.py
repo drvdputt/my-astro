@@ -3,8 +3,28 @@ import numpy as np
 from regions import SkyRegion
 from matplotlib import pyplot as plt, ticker, colors
 from astropy import units as u
-
+from matplotlib import transforms as mtransforms
 from myastro import regionhacks, wcshacks
+from regions import Region
+
+
+def region_as_patch_for_imshow(reg: Region, imshow_object, image_shape, wcs):
+    """Convert region to matplotlib patch.
+
+    Wrote this because region.plot() assumes the extent of the axes is
+    the pixel coordinates. I sometimes change the extent (e.g. to
+    represent arcsecond offsets), and then the patches will be in the
+    wrong place. Here, I add a transformation from the original pixel
+    coordinates to the extent that was set for imshow, to make sure the
+    patch still corresponds to the same part of the image.
+
+    """
+    patch = reg.to_pixel(wcs).as_artist()
+    patch.set_transform(
+        pixel_to_data_transform(imshow_object.get_extent(), image_shape, origin="lower")
+        + imshow_object.axes.transData
+    )
+    return patch
 
 
 def draw_region(
@@ -305,3 +325,26 @@ def scatter_in_pixel_coords(
     # ax.set_xlim(xc - xw / 2, xc + xw / 2)
     # ax.set_ylim(yc - yw / 2, yc + yw / 2)
     return {"scatter": scatter, "x": x, "y": y}
+
+
+def pixel_to_data_transform(extent, img_shape, origin="upper"):
+    """
+    Returns a Transform that maps original pixel (col, row) coordinates
+    to the new data coordinates defined by extent.
+    """
+    npix_y, npix_x = img_shape
+    xmin, xmax, ymin, ymax = extent
+
+    # Scaling factor is number of data units per pixel
+    sx = (xmax - xmin) / npix_x
+    sy = (ymax - ymin) / npix_y
+
+    # invert in case of "upper" origin
+    if origin == "upper":
+        sy *= -1
+        ty = ymax
+    else:
+        ty = ymin
+
+    transform = mtransforms.Affine2D().scale(sx, sy).translate(xmin, ty)
+    return transform
