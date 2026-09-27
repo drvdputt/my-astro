@@ -213,7 +213,7 @@ def make_compass_region(ra, dec, size):
     return center_north, center_east
 
 
-def filter_sources_by_region(region_fn, ras, decs, image_wcs):
+def filter_sources_by_region(region_list : Regions, ras, decs, image_wcs):
     """Region file can be in ra dec or in image coords.
 
     Image wcs needed because internal conversion to pixel coords happens
@@ -225,9 +225,8 @@ def filter_sources_by_region(region_fn, ras, decs, image_wcs):
     returns: boolean mask
 
     """
-    regions = Regions.read(region_fn)
     pix_regions = [
-        r.to_pixel(image_wcs) if hasattr(r, "to_pixel") else r for r in regions
+        r.to_pixel(image_wcs) if hasattr(r, "to_pixel") else r for r in region_list
     ]
 
     skycoords = SkyCoord(ra=ras * u.degree, dec=decs * u.degree)
@@ -235,10 +234,3 @@ def filter_sources_by_region(region_fn, ras, decs, image_wcs):
     mask = np.logical_or.reduce([ri.contains(pixcoords) for ri in pix_regions])
     return mask
 
-    # keeping old code cause i'm not under version control
-    # r2 = r.as_imagecoord(image_wcs.to_header())
-    # myfilter = r2.get_filter()
-    # coords = image_wcs.celestial.world_to_pixel_values(catalog['RA'], catalog['DEC'])
-    # x, y = coords[0], coords[1]
-    # mask = np.array([0 != myfilter.inside1(x[i], y[i]) for i in range(len(catalog))])
-    # return catalog[mask]
